@@ -17,7 +17,7 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
-`npm run check:contrast` checks every colour pair in the tokens. `npm test` runs the engine tests. `npm run render:examples` regenerates the pixel art and block renders in `src/assets/renders/` from the example photos.
+`npm run check:contrast` checks every colour pair in the tokens. `npm test` runs the engine tests. `npm run seo` audits the built site (run after `npm run build`): titles, descriptions, headings, canonicals, Open Graph, JSON-LD, alt text, internal links and the sitemap; it must report 0 errors before a PR. `npm run render:icons` redraws the icons and OG image from the site name. `npm run render:examples` regenerates the pixel art and block renders in `src/assets/renders/` from the example photos.
 
 Palette sources and licences are in `src/palettes/SOURCES.md`. Minecraft blocks are average texture colours and names only; never add game textures or the logo.
 

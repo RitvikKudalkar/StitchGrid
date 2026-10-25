@@ -2,6 +2,8 @@
 // A tool page (execution-plan.md §6): the headline and promise, the workbench on the tool's
 // thread colour, then the page's own sections (the slot), the questions and the guides.
 // WebApplication, FAQPage and breadcrumb structured data included.
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
 import Layout from './Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -20,9 +22,12 @@ interface Props {
   /** The one-line promise under the headline. */
   lead: string;
   faqs: Faq[];
+  /** A picture for link previews; the site's OG image when left out. */
+  ogPicture?: { image: ImageMetadata; alt: string };
 }
 
-const { slug, craft, title, description, lead, faqs } = Astro.props;
+const { slug, craft, title, description, lead, faqs, ogPicture } = Astro.props;
+const og = ogPicture ? await getImage({ src: ogPicture.image, width: Math.min(1200, ogPicture.image.width), format: 'jpg' }) : null;
 const tool = toolBySlug(slug);
 const toolGuides = guides.filter((g) => g.tool === slug);
 ---
@@ -30,6 +35,9 @@ const toolGuides = guides.filter((g) => g.tool === slug);
 <Layout
   title={title}
   description={description}
+  ogImage={og?.src}
+  ogImageSize={og ? { width: Number(og.attributes.width), height: Number(og.attributes.height) } : undefined}
+  ogImageAlt={ogPicture?.alt}
   thread={{ color: tool.thread, ink: tool.threadInk }}
   schema={[...toolSchemas({ path: `/${tool.slug}`, name: tool.name, description }), faqSchema(faqs)]}
 >

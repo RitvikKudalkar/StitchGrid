@@ -1,7 +1,7 @@
 ---
 // A guide: headline, byline, a reading column, and a thread-coloured band that sends the
 // reader to the tool the guide supports. Article and breadcrumb structured data included.
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Layout from './Layout.astro';
 import GuideList from '../components/GuideList.astro';
 import Header from '../components/Header.astro';
@@ -21,6 +21,12 @@ const guide = guideBySlug(slug);
 const tool = toolBySlug(guide.tool);
 const url = `${SITE_URL}/guides/${slug}`;
 const others = guides.filter((g) => g.slug !== slug && g.tool === guide.tool);
+const modified = guide.modified ?? guide.published;
+// Titles over 60 characters lose the site name rather than being cut off in results.
+const pageTitle = guide.title.length + SITE_NAME.length + 3 <= 60 ? `${guide.title} | ${SITE_NAME}` : guide.title;
+// A 1200-wide JPEG of the lead picture, for link previews.
+const og = await getImage({ src: guide.picture.image, width: Math.min(1200, guide.picture.image.width), format: 'jpg' });
+const ogSize = { width: Number(og.attributes.width), height: Number(og.attributes.height) };
 const date = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 const schema: object[] = [
@@ -31,10 +37,11 @@ const schema: object[] = [
     description: guide.description,
     url,
     datePublished: guide.published,
-    dateModified: guide.modified ?? guide.published,
+    dateModified: modified,
     author: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url },
-    publisher: { '@id': `${SITE_URL}/#organization` },
-    image: new URL(guide.picture.image.src, SITE_URL).href,
+    publisher: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`, logo: { '@type': 'ImageObject', url: `${SITE_URL}/apple-touch-icon.png` } },
+    image: new URL(og.src, SITE_URL).href,
+    mainEntityOfPage: url,
   },
   {
     '@context': 'https://schema.org',
@@ -49,7 +56,7 @@ const schema: object[] = [
 if (faqs.length) schema.push(faqSchema(faqs));
 ---
 
-<Layout title={`${guide.title} | ${SITE_NAME}`} description={guide.description} ogType="article" thread={{ color: tool.thread, ink: tool.threadInk }} schema={schema}>
+<Layout title={pageTitle} description={guide.description} ogType="article" ogImage={og.src} ogImageSize={ogSize} ogImageAlt={guide.picture.alt} article={{ published: guide.published, modified }} thread={{ color: tool.thread, ink: tool.threadInk }} schema={schema}>
   <Header />
 
   <main id="main" tabindex="-1" class="flex-1 w-full outline-none">

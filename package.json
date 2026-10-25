@@ -15,7 +15,8 @@
     "deploy": "astro build && wrangler deploy",
     "test": "vitest run",
     "render:examples": "node scripts/render-examples.mjs",
-    "render:icons": "node scripts/render-icons.mjs"
+    "render:icons": "node scripts/render-icons.mjs",
+    "seo": "node scripts/seo-audit.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
