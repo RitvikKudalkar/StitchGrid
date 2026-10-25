@@ -29,6 +29,22 @@ export function stitchesPerSkein(fabricCount: number, strands: number) {
   return strandInchesPerSkein / (inchesPerStitch * strands);
 }
 
+/** Minecraft blocks as stacks of 64 and shulker boxes of 27 stacks. */
+export function blockStacks(blocks: number) {
+  const stacks = Math.floor(blocks / 64);
+  const rest = blocks % 64;
+  const shulkers = blocks / (64 * 27);
+  return { stacks, rest, shulkers };
+}
+
+/** "3 stacks + 12", "40", "1 stack". */
+export function formatStacks(blocks: number) {
+  const { stacks, rest } = blockStacks(blocks);
+  if (!stacks) return String(rest);
+  const s = `${stacks} stack${stacks === 1 ? '' : 's'}`;
+  return rest ? `${s} + ${rest}` : s;
+}
+
 /** Finished size of a chart, in inches and centimetres, at `perInch` cells to the inch. */
 export function finishedSize(width: number, height: number, perInch: number) {
   const w = width / perInch;

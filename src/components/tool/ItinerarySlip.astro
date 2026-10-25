@@ -1,0 +1,87 @@
+---
+// "Itinerary on a slip": the process as a receipt grouped by where it happens, beside the
+// how-to text (the slot), on a field of the tool's thread colour.
+
+interface Props {
+  groups: { when: string; rows: [string, string][] }[];
+  /** The inverted last row: what you hold at the end, and how long it took. */
+  result: [string, string];
+}
+
+const { groups, result } = Astro.props;
+---
+
+<section class="how-field section-gap">
+  <div class="wrap how">
+    <div class="how-text article">
+      <slot />
+    </div>
+    <div class="slip itinerary tabular">
+      {groups.map((g) => (
+        <div class="itinerary-group">
+          <p class="itinerary-when">{g.when}</p>
+          {g.rows.map(([what, time]) => (
+            <p class="itinerary-row"><span>{what}</span><span class="leader" aria-hidden="true"></span><span>{time}</span></p>
+          ))}
+        </div>
+      ))}
+      <p class="itinerary-result"><span>{result[0]}</span><span>{result[1]}</span></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .how-field {
+    background: var(--color-thread);
+    color: var(--color-thread-ink);
+    padding-block: clamp(72px, 9vw, 144px);
+  }
+  .how {
+    display: grid;
+    gap: var(--spacing-3xl);
+  }
+  @media (min-width: 1000px) {
+    .how { grid-template-columns: 6fr 5fr; align-items: start; }
+  }
+  /* A long keyword heading: sized to stay on two lines in its column. */
+  .how-text :global(h2) {
+    font-size: clamp(2.25rem, 0.8rem + 3.4vw, 4rem);
+    margin-bottom: var(--spacing-lg);
+  }
+  .how-text :global(a) { color: inherit; }
+  .itinerary {
+    width: 100%;
+    max-width: 480px;
+    padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-lg) + 12px);
+    justify-self: center;
+  }
+  .itinerary-group + .itinerary-group { margin-top: 28px; }
+  .itinerary-when {
+    font-weight: 500;
+    font-size: var(--step-lead);
+    margin-bottom: 6px;
+  }
+  .itinerary-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-block: 4px;
+  }
+  .itinerary-row > span:last-child,
+  .itinerary-result > span:last-child { white-space: nowrap; }
+  .leader {
+    flex: 1;
+    min-width: 24px;
+    border-bottom: 4px dotted currentColor;
+    opacity: 0.45;
+  }
+  .itinerary-result {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    padding: 12px 14px;
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+</style>

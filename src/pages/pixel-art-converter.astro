@@ -1,0 +1,117 @@
+---
+// Phase 2 traffic page (execution-plan.md §1 #2, §5): photo to pixel art, free colours or retro
+// palettes, a grid if wanted, and crisp PNG at any size.
+import ToolLayout from '../layouts/ToolLayout.astro';
+import ExamplePlate from '../components/tool/ExamplePlate.astro';
+import GiantBars from '../components/tool/GiantBars.astro';
+import ItinerarySlip from '../components/tool/ItinerarySlip.astro';
+import ReadingColumn from '../components/tool/ReadingColumn.astro';
+import RenderGallery from '../components/tool/RenderGallery.astro';
+import { renders } from '../data/renders';
+import type { Faq } from '../data/schema';
+
+const portrait = renders('pixel').find((r) => r.id === 'portrait')!;
+
+const title = 'Pixel Art Converter: Turn a Photo Into Pixel Art';
+const description = 'Free photo to pixel art converter. Pick the size and colours, use retro palettes, add a grid and download a crisp PNG. Nothing is uploaded.';
+
+const advice = {
+  cat: { settings: '48 pixels, 16 colours', text: 'Faces want a little more width than you\'d think: at 32 pixels the eyes are only two or three pixels across. Free colours keep the warm fur tones; a retro palette makes it bolder.' },
+  flower: { settings: '40 pixels, 12 colours, background left empty', text: 'A single subject on a plain background makes classic sprite-style pixel art. Leave the background empty and the PNG comes out with a transparent background.' },
+  house: { settings: '64 pixels, 24 colours', text: 'Scenes need more pixels to read. Try the 8-bit console palette for an old game look, and turn on blending if the gradients look stripy.' },
+  portrait: { settings: '48 pixels, 4 colours, handheld green', text: 'Portraits work surprisingly well with very few colours: four shades of green turn any face into a handheld-console sprite.' },
+};
+
+const sizes = [
+  { px: 16, use: 'icons and favicons' },
+  { px: 32, use: 'game sprites and emotes' },
+  { px: 64, use: 'avatars and portraits' },
+  { px: 128, use: 'scenes and wallpapers' },
+].map(({ px, use }) => ({
+  label: `${px} × ${px}: ${use}`,
+  caption: `Image sizes for ${px}-pixel art`,
+  head: ['Each pixel', 'Image size', 'Good for'],
+  rows: [
+    ['1 px', `${px} × ${px}`, 'game engines, editing'],
+    ['8 px', `${px * 8} × ${px * 8}`, 'sharing, profile pictures'],
+    ['16 px', `${px * 16} × ${px * 16}`, 'printing, posters'],
+  ],
+}));
+
+const faqs: Faq[] = [
+  { question: 'Is this pixel art converter free?', answer: 'Yes. No sign-up, no watermark and no limit on downloads.' },
+  { question: 'Are my photos uploaded?', answer: 'No. Your photo is turned into pixel art inside your browser and never leaves your device.' },
+  { question: 'What size should my pixel art be?', answer: '32 to 64 pixels across suits most photos. Smaller looks more like a classic sprite but loses detail; larger looks more like a mosaic.' },
+  { question: 'How do I keep the pixels sharp when I make it bigger?', answer: 'Download the scaled image here, which enlarges each pixel into a crisp square. If you resize the small image in another app, choose "nearest neighbour" scaling, or it will blur.' },
+  { question: 'Can I add a grid?', answer: 'Yes. "With grid" shows a grid on the preview, and "Grid lines in the image" draws one into the download, which helps when you copy it by hand into beads, stitches or blocks.' },
+  { question: 'Can I edit single pixels?', answer: 'Yes. Press Edit above the image, pick a colour in the key and paint. Replace all swaps every pixel of one colour, and Undo steps back.' },
+  { question: 'Can I use the pixel art in my game or shop?', answer: 'If the photo is yours, the pixel art is yours to use however you like. If someone else took the photo, ask them first.' },
+];
+---
+
+<ToolLayout
+  slug="pixel-art-converter"
+  craft="pixel-art"
+  title={title}
+  description={description}
+  lead="Turn any photo into pixel art: choose the size and colours, try a retro palette, and download a crisp PNG. Free, and your photo stays on this device."
+  faqs={faqs}
+>
+  <RenderGallery heading="Photos to pixels" items={renders('pixel')} pixelated />
+
+  <ExamplePlate heading="Settings that work" advice={advice} />
+
+  <ItinerarySlip
+    groups={[
+      { when: 'Pick', rows: [['Choose a photo', '10 sec'], ['Set the width in pixels', '10 sec'], ['Choose free colours or a palette', '10 sec']] },
+      { when: 'Polish', rows: [['Fix stray pixels with Edit', '1 min'], ['Turn on the grid if you\'ll copy it', '5 sec']] },
+      { when: 'Keep', rows: [['Download a crisp scaled PNG', '5 sec'], ['Or the 1-pixel original for editing', '5 sec']] },
+    ]}
+    result={['You hold sharp pixel art at any size', '1 min']}
+  >
+    <h2 class="display-lg">How to turn a photo into pixel art</h2>
+    <p class="lead">Drop a photo on the canvas. It's shrunk to your width, each pixel taking the average colour of the photo under it, and the colours reduced to as few as you choose.</p>
+    <p>The <strong>width</strong> sets how chunky it looks: 32 pixels feels like an old game sprite, 128 feels like a mosaic. The <strong>number of colours</strong> sets how flat or smooth the shading is. Choose <strong>free colours</strong> to keep the photo's own tones, or a fixed palette for a retro look.</p>
+    <p>The download enlarges every pixel into a clean square, so it stays sharp on any screen. The 1-pixel version is for game engines and pixel editors like Aseprite or Piskel.</p>
+  </ItinerarySlip>
+
+  <GiantBars word="Sizes" intro="Pixel art is measured in pixels across. The same art downloads at any size by making each pixel a bigger square. Open a size to see what it suits." bars={sizes} open={1}>
+    <p>Building it in real life? The <a href="/minecraft-pixel-art-generator">Minecraft generator</a> counts blocks, and the <a href="/cross-stitch-pattern-maker">cross stitch pattern maker</a> turns it into a chart with threads.</p>
+  </GiantBars>
+
+  <ReadingColumn>
+    <h2 class="display-lg">Free colours or a retro palette</h2>
+    <p><strong>Free colours</strong> picks the best handful of colours for your photo, whatever they are. It gives the most faithful result.</p>
+    <p>A <strong>palette</strong> limits you to a fixed set, the way old consoles did. Your photo is matched to the closest colours in it, judged by eye rather than by numbers:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Palette</th><th scope="col">Colours</th><th scope="col">Looks like</th></tr></thead>
+        <tbody>
+          <tr><td>Free colours</td><td>2–64, chosen for your photo</td><td>Your photo, simplified</td></tr>
+          <tr><td>PICO-8</td><td>16 fixed</td><td>Bright, cheerful fantasy-console games</td></tr>
+          <tr><td>8-bit console</td><td>55 fixed</td><td>Mid-1980s home console games</td></tr>
+          <tr><td>Handheld green</td><td>4 shades of green</td><td>The original pocket handheld screen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>With a fixed palette, the "colours" slider sets the most it may use; a photo often needs fewer. Real 8-bit hardware could only show a few colours at once, so for an authentic look keep the count low.</p>
+
+    <h2 class="display-lg">Tips for photos that pixelate well</h2>
+    <ul>
+      <li><strong>Bold shapes beat fine detail.</strong> Hair strands, text and patterns vanish at small sizes; faces, animals and objects survive.</li>
+      <li><strong>Crop tight.</strong> Every pixel of background is a pixel the subject doesn't get.</li>
+      <li><strong>Raise the contrast</strong> in More settings if the result looks muddy.</li>
+      <li><strong>Leave the background empty</strong> for a sprite with a transparent background.</li>
+    </ul>
+
+    <h2 class="display-lg">Keeping pixel art sharp</h2>
+    <p>Pixel art blurs when an app enlarges it by blending neighbouring pixels. The scaled download avoids that by drawing each pixel as a solid square of exactly the size you choose. If you resize the 1-pixel image yourself, pick "nearest neighbour" (sometimes called "hard edges" or "point") scaling, and use whole-number sizes: 2×, 3×, 8×.</p>
+
+    <h2 class="display-lg">Dithering</h2>
+    <p>With few colours, smooth gradients become visible stripes. <strong>Blend colours</strong> scatters pixels of two colours to suggest the shade between them, the technique old games used for skies and shadows. It's off by default because it makes the art busier; try it on gradients and leave it off on faces.</p>
+    <figure slot="aside">
+      <img src={portrait.image.src} width={portrait.image.width} height={portrait.image.height} alt={portrait.alt} loading="lazy" decoding="async" style="image-rendering: pixelated" />
+      <figcaption class="small mt-xs">{portrait.facts.join(', ')}. The {portrait.label.toLowerCase()} example, charted here.</figcaption>
+    </figure>
+  </ReadingColumn>
+</ToolLayout>

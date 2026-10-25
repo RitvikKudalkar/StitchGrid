@@ -1,8 +1,9 @@
-// Picks the best N palette colours for an image: k-means in Lab finds N centres, then each
-// centre snaps to its nearest palette colour by CIEDE2000, skipping colours already taken.
+// Picks the best N colours for an image: k-means in Lab finds N centres. With a palette, each
+// centre snaps to its nearest palette colour by CIEDE2000, skipping colours already taken;
+// without one ("free colours"), the centres themselves become the palette.
 
-import { deltaE2000, distLab2, type Lab } from './color';
-import type { Palette } from './palette';
+import { deltaE2000, distLab2, labToRgb, rgbToHex, type Lab } from './color';
+import { fromColors, type Palette } from './palette';
 
 /** Cells used to train k-means. Larger grids are sampled evenly; the result barely changes. */
 const MAX_SAMPLES = 12000;
@@ -14,10 +15,48 @@ const ROUNDS = 12;
  * @returns indices into `palette.colors`, most-used first is not guaranteed
  */
 export function choosePaletteColors(labs: Float32Array, active: Uint32Array, palette: Palette, maxColors: number): number[] {
-  const n = active.length;
-  if (n === 0) return [];
-  const k = Math.min(maxColors, n, palette.colors.length);
+  const k = Math.min(maxColors, active.length, palette.colors.length);
+  if (k === 0) return [];
+  const { centres, sizes } = kMeans(labs, active, k);
 
+  // Snap centres to real colours, biggest clusters first so they get their best match.
+  const order = [...Array(k).keys()].filter((c) => sizes[c] > 0).sort((a, b) => sizes[b] - sizes[a]);
+  const taken = new Set<number>();
+  for (const c of order) {
+    const centre: Lab = [centres[c * 3], centres[c * 3 + 1], centres[c * 3 + 2]];
+    let best = -1;
+    let bestD = Infinity;
+    for (let p = 0; p < palette.colors.length; p++) {
+      if (taken.has(p)) continue;
+      const d = deltaE2000(centre, palette.colors[p].lab);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    if (best >= 0) taken.add(best);
+  }
+  return [...taken];
+}
+
+/** "Free colours": the k-means centres themselves, as a palette named by hex code. */
+export function freePalette(labs: Float32Array, active: Uint32Array, maxColors: number): Palette {
+  const k = Math.min(maxColors, active.length);
+  const seen = new Set<string>();
+  const colors = [];
+  if (k > 0) {
+    const { centres, sizes } = kMeans(labs, active, k);
+    for (let c = 0; c < k; c++) {
+      if (!sizes[c]) continue;
+      const rgb = labToRgb([centres[c * 3], centres[c * 3 + 1], centres[c * 3 + 2]]);
+      const hex = rgbToHex(rgb);
+      if (seen.has(hex)) continue;
+      seen.add(hex);
+      colors.push({ code: hex, name: hex, hex, rgb, lab: [centres[c * 3], centres[c * 3 + 1], centres[c * 3 + 2]] as Lab });
+    }
+  }
+  return fromColors('free', 'Free colours', '', colors);
+}
+
+function kMeans(labs: Float32Array, active: Uint32Array, k: number) {
+  const n = active.length;
   const step = Math.max(1, n / MAX_SAMPLES);
   const sample: number[] = [];
   for (let s = 0; s < n; s += step) sample.push(active[Math.floor(s)]);
@@ -52,23 +91,9 @@ export function choosePaletteColors(labs: Float32Array, active: Uint32Array, pal
     if (!moved && round > 0) break;
   }
 
-  // Snap centres to real colours, biggest clusters first so they get their best match.
-  const sizes = new Array(k).fill(0);
+  const sizes = new Array<number>(k).fill(0);
   for (let s = 0; s < sample.length; s++) sizes[assign[s]]++;
-  const order = [...Array(k).keys()].filter((c) => sizes[c] > 0).sort((a, b) => sizes[b] - sizes[a]);
-  const taken = new Set<number>();
-  for (const c of order) {
-    const centre: Lab = [centres[c * 3], centres[c * 3 + 1], centres[c * 3 + 2]];
-    let best = -1;
-    let bestD = Infinity;
-    for (let p = 0; p < palette.colors.length; p++) {
-      if (taken.has(p)) continue;
-      const d = deltaE2000(centre, palette.colors[p].lab);
-      if (d < bestD) { bestD = d; best = p; }
-    }
-    if (best >= 0) taken.add(best);
-  }
-  return [...taken];
+  return { centres, sizes };
 }
 
 /** k-means++ seeding with a fixed sequence, so the same photo always gives the same chart. */

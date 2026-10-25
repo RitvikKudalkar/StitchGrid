@@ -1,6 +1,7 @@
 // Talks to the pattern worker. Decodes the photo in this tab, shrinks it to a working size,
 // and asks for patterns; when options change quickly, only the newest answer is used.
 
+import type { PaletteFilter } from '../engine/palette';
 import type { Pattern, PatternOptions } from '../engine/pattern';
 import type { WorkerRequest } from '../workers/pattern.worker';
 
@@ -48,10 +49,10 @@ export class PatternClient {
     return { preview: canvas, width, height };
   }
 
-  render(options: PatternOptions, palette = 'dmc'): Promise<Pattern> {
+  render(options: PatternOptions, palette = 'dmc', filter?: PaletteFilter): Promise<Pattern> {
     const id = ++this.nextId;
     this.latest = id;
-    const msg: WorkerRequest = { type: 'render', id, palette, options };
+    const msg: WorkerRequest = { type: 'render', id, palette, filter, options };
     this.worker.postMessage(msg);
     return new Promise((resolve) => this.waiting.set(id, resolve));
   }

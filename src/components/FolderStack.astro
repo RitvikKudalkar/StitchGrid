@@ -62,7 +62,7 @@ const { back, front } = Astro.props;
   .tab {
     position: absolute;
     bottom: 100%;
-    left: var(--x);
+    left: min(var(--x), calc(100% - 8.5em));
     display: flex;
     align-items: center;
     height: 32px;

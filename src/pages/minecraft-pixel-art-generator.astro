@@ -1,0 +1,117 @@
+---
+// Phase 2 traffic page (execution-plan.md §1 #3, §5): photo to Minecraft pixel art with a block
+// count, a material list in stacks and shulker boxes, and a row-by-row building view.
+// "Minecraft" in text only: no logo, no game textures, unofficial.
+import ToolLayout from '../layouts/ToolLayout.astro';
+import ExamplePlate from '../components/tool/ExamplePlate.astro';
+import GiantBars from '../components/tool/GiantBars.astro';
+import ItinerarySlip from '../components/tool/ItinerarySlip.astro';
+import ReadingColumn from '../components/tool/ReadingColumn.astro';
+import RenderGallery from '../components/tool/RenderGallery.astro';
+import { renders } from '../data/renders';
+import type { Faq } from '../data/schema';
+
+const house = renders('minecraft').find((r) => r.id === 'house')!;
+
+const title = 'Minecraft Pixel Art Generator With Block Count';
+const description = 'Turn any image into Minecraft pixel art with a block count and material list in stacks and shulker boxes. Build it row by row. Free, unofficial.';
+
+const advice = {
+  cat: { settings: '64 blocks, 24 kinds, all solid blocks', text: 'Fur needs the in-between browns and creams that only terracotta and planks give. Wool alone makes the face flatter but is easier to gather.' },
+  flower: { settings: '48 blocks, 12 kinds, background left empty', text: 'A single subject with the background left empty is the quickest build: no filler blocks, and it stands out against the sky.' },
+  house: { settings: '96 blocks, 30 kinds', text: 'Scenes need size. At 64 blocks the door and wreath read clearly from a distance; at 32 they turn to noise.' },
+  portrait: { settings: '80 blocks, 20 kinds, concrete only', text: 'Concrete\'s flat colour makes faces look clean, and in survival it\'s easy to make in bulk from sand, gravel and dye.' },
+};
+
+const nf = new Intl.NumberFormat('en');
+const stacksBars = [32, 64, 128, 256].map((side) => {
+  const blocks = side * side;
+  return {
+    label: `${side} × ${side} blocks`,
+    caption: `Blocks needed for a ${side} by ${side} build`,
+    head: ['Blocks', 'Stacks of 64', 'Shulker boxes', 'Double chests'],
+    rows: [[nf.format(blocks), nf.format(blocks / 64), (blocks / 1728).toFixed(1), (blocks / 3456).toFixed(1)]],
+  };
+});
+
+const faqs: Faq[] = [
+  { question: 'Is this Minecraft pixel art generator free?', answer: 'Yes. No sign-up and no limit. It runs in your browser, and your image is never uploaded.' },
+  { question: 'How many blocks will I need?', answer: 'The block list counts every block and shows it in stacks of 64 and shulker boxes of 27 stacks (1,728 blocks). A 64 × 64 picture is 4,096 blocks: 64 stacks, or about 2.4 shulker boxes.' },
+  { question: 'Which blocks does it use?', answer: 'Full, solid blocks with an even face: wool, concrete, terracotta, planks, stone and more. By default it leaves out precious blocks and blocks that fall, like sand and concrete powder. You can limit it to wool or concrete only.' },
+  { question: 'Does it work for Bedrock and Java?', answer: 'Yes. The blocks it uses exist in both editions with the same names, so the list works for either.' },
+  { question: 'Can I make map art with it?', answer: 'You can, but colours are matched to each block\'s side texture, which is what you see on a wall. Maps show blocks in the game\'s own map colours, so map art may look slightly different in a map.' },
+  { question: 'Can I get a schematic file?', answer: 'Not yet. For now, download the block list and build row by row with the row view, which lists each row from left to right.' },
+  { question: 'Is this an official Minecraft tool?', answer: 'No. StitchGrid is unofficial and not affiliated with Mojang or Microsoft. Block colours are averages of each block\'s texture; no game textures are used.' },
+];
+---
+
+<ToolLayout
+  slug="minecraft-pixel-art-generator"
+  craft="minecraft"
+  title={title}
+  description={description}
+  lead="Turn any image into Minecraft pixel art, with a block count, a material list in stacks and shulker boxes, and a row-by-row view for building. Free and unofficial."
+  faqs={faqs}
+>
+  <RenderGallery heading="Photos to blocks" items={renders('minecraft')} />
+
+  <ExamplePlate heading="Settings that work" advice={advice} />
+
+  <ItinerarySlip
+    groups={[
+      { when: 'Plan', rows: [['Choose an image', '10 sec'], ['Set the width and kinds of block', '1 min'], ['Download the block list', '5 sec']] },
+      { when: 'Gather', rows: [['Collect the blocks on the list', 'a few sessions'], ['Sort them into shulker boxes', '10 min']] },
+      { when: 'Build', rows: [['Mark out the width on the ground', '2 min'], ['Place it row by row, bottom first', 'your pace']] },
+    ]}
+    result={['You hold a block list and a row guide', '2 min']}
+  >
+    <h2 class="display-lg">How to make Minecraft pixel art from an image</h2>
+    <p class="lead">Drop an image on the chart. Every block is matched to the real block whose colour is closest, judged by eye, and the list counts them for you.</p>
+    <p>Set the <strong>width</strong> in blocks first; height follows from the image. Then set the <strong>kinds of block</strong>: fewer kinds means fewer trips to gather them. Use the <strong>Blocks</strong> setting to stick to wool, concrete or terracotta, and keep <strong>survival-friendly</strong> on unless you have diamond blocks to spare.</p>
+    <p>Tick <strong>Build it row by row</strong> to step through the picture one row at a time, from the bottom up, with each row listed left to right: "4 × white wool, 2 × light grey concrete".</p>
+  </ItinerarySlip>
+
+  <GiantBars word="Stacks" intro="Pixel art eats blocks. Open a size to see how many you'll need, in stacks of 64, shulker boxes of 27 stacks and double chests of 54." bars={stacksBars} open={1}>
+    <p>A tall wall needs height too: from the bottom of the world to the top is 384 blocks in Java Edition 1.18 and later. The <a href="/guides/how-to-build-pixel-art-in-minecraft">building guide</a> has survival tips for big builds.</p>
+  </GiantBars>
+
+  <ReadingColumn>
+    <h2 class="display-lg">Wool, concrete or terracotta</h2>
+    <p>Each block set has its own look and its own cost in survival:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Blocks</th><th scope="col">Colours</th><th scope="col">Looks</th><th scope="col">In survival</th></tr></thead>
+        <tbody>
+          <tr><td>Wool</td><td>16</td><td>Soft, slightly textured</td><td>Shear sheep, dye it; flammable</td></tr>
+          <tr><td>Concrete</td><td>16</td><td>Flat, bright, clean</td><td>Powder from sand, gravel and dye, set with water</td></tr>
+          <tr><td>Terracotta</td><td>17</td><td>Muted, earthy</td><td>Smelt clay, then dye; plenty in badlands</td></tr>
+          <tr><td>All solid blocks</td><td>132 (160 with every block allowed)</td><td>The most faithful</td><td>Many sources; best for faces and photos</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Mixing sets gives the best photos, because terracotta, planks and stone fill the gaps between wool and concrete's bright colours. Wool alone gives a bold, poster-like result that's easy to gather.</p>
+
+    <h2 class="display-lg">Blocks it leaves out</h2>
+    <p>Only full, solid blocks with an even face are used, so the picture looks the same from any distance. Glass, leaves and grass are left out: leaves and grass change colour with the biome, and glass is see-through. With the default settings it also skips:</p>
+    <ul>
+      <li><strong>Falling blocks</strong>: sand, red sand, gravel and concrete powder drop when there's nothing under them, which ruins a wall.</li>
+      <li><strong>Precious blocks</strong>: gold, diamond, emerald, iron, lapis, redstone and netherite blocks, which are costly in survival.</li>
+    </ul>
+
+    <h2 class="display-lg">Wall, floor or map</h2>
+    <p>Build it <strong>upright as a wall</strong> to see it from the ground, starting with the bottom row. Lay it <strong>flat as a floor</strong> to see it from above or from a tower. For <strong>map art</strong>, built flat and viewed through a map, keep in mind that maps draw each block in its own map colour, so the result can differ a little from what the generator shows.</p>
+
+    <h2 class="display-lg">Tips for images that build well</h2>
+    <ul>
+      <li><strong>Simple, bold images</strong> read best from a distance: logos, characters, pets.</li>
+      <li><strong>Crop tight</strong> so every block goes to the subject.</li>
+      <li><strong>Leave the background empty</strong> to build only the subject, against the sky or your base.</li>
+      <li><strong>Fix stray blocks with Edit</strong>: paint single blocks, replace every block of one kind, or merge a kind away so you have one less to gather.</li>
+    </ul>
+    <p class="small">StitchGrid is unofficial and not affiliated with Mojang or Microsoft. "Minecraft" is a trademark of Mojang Synergies AB. Block colours are averages of each block's texture, from the open-source blockpedia project; no game textures are used.</p>
+    <figure slot="aside">
+      <img src={house.image.src} width={house.image.width} height={house.image.height} alt={house.alt} loading="lazy" decoding="async" />
+      <figcaption class="small mt-xs">{house.facts.join(', ')}. The {house.label.toLowerCase()} example, drawn from block colours.</figcaption>
+    </figure>
+  </ReadingColumn>
+</ToolLayout>

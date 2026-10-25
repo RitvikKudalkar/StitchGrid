@@ -1,0 +1,57 @@
+---
+// The long-form content of a tool page: a reading column of about 68 characters, with real
+// tables (which may have lines) and plates. An optional "aside" slot holds a picture that
+// stays in view beside the text on wide screens.
+const hasAside = Astro.slots.has('aside');
+---
+
+<section class:list={['wrap section-gap reading', { 'with-aside': hasAside }]}>
+  <div class="article">
+    <slot />
+  </div>
+  {hasAside && <aside class="reading-aside"><slot name="aside" /></aside>}
+</section>
+
+<style>
+  .with-aside {
+    display: grid;
+    gap: var(--spacing-3xl);
+  }
+  @media (min-width: 1100px) {
+    .with-aside { grid-template-columns: minmax(0, 68ch) minmax(0, 1fr); gap: var(--spacing-4xl); }
+    .reading-aside {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+    }
+  }
+  .reading-aside :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .reading .article :global(h2) { margin-bottom: 0.4em; }
+  .reading .article :global(h2:first-child) { margin-top: 0; }
+  .reading :global(.table-wrap) { overflow-x: auto; }
+  .reading :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step-small);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .reading :global(th),
+  .reading :global(td) {
+    padding: 10px 12px 10px 0;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-mat-raised);
+  }
+  .reading :global(th) { font-weight: 500; }
+  .reading .article :global(figure img) {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+  }
+  .reading :global(strong) { font-weight: 500; }
+</style>
