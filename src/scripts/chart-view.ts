@@ -48,10 +48,25 @@ export class ChartView {
   mode: ChartMode = 'colour';
   /** Cell size in CSS pixels after the last draw. */
   cell = 0;
+  /** Left edge of the grid after the last draw; the grid is centred when it fits by height. */
+  private x0 = MARGIN;
+  /**
+   * Tallest the chart may be, in CSS pixels, so it fits its box without scrolling.
+   * Set at "Fit" zoom; null when zoomed in, where the chart fills the width and scrolls.
+   */
+  maxHeight: number | null = null;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
-    new ResizeObserver(() => this.draw()).observe(canvas);
+    // Redraw only when the width really changes; height follows from width, so watching it
+    // as well would let the chart's own height change trigger another draw.
+    let lastWidth = 0;
+    new ResizeObserver(() => {
+      const width = canvas.clientWidth;
+      if (width === lastWidth) return;
+      lastWidth = width;
+      this.draw();
+    }).observe(canvas);
   }
 
   get data() {
@@ -143,7 +158,7 @@ export class ChartView {
   /** The cell under a point in CSS pixels relative to the canvas, or null. */
   cellAt(x: number, y: number) {
     if (!this.chart || !this.cell) return null;
-    const cx = Math.floor((x - MARGIN) / this.cell);
+    const cx = Math.floor((x - this.x0) / this.cell);
     const cy = Math.floor((y - MARGIN) / this.cell);
     if (cx < 0 || cy < 0 || cx >= this.chart.width || cy >= this.chart.height) return null;
     return { x: cx, y: cy, color: this.chart.cells[cy * this.chart.width + cx] };
@@ -154,7 +169,8 @@ export class ChartView {
     if (!chart) return;
     const dpr = window.devicePixelRatio || 1;
     const cssWidth = canvas.clientWidth;
-    const cell = Math.max(2, (cssWidth - MARGIN * 2) / chart.width);
+    let cell = Math.max(2, (cssWidth - MARGIN * 2) / chart.width);
+    if (this.maxHeight) cell = Math.max(2, Math.min(cell, (this.maxHeight - MARGIN * 2) / chart.height));
     this.cell = cell;
     const cssHeight = Math.round(cell * chart.height + MARGIN * 2);
     if (canvas.width !== Math.round(cssWidth * dpr) || canvas.height !== Math.round(cssHeight * dpr)) {
@@ -166,7 +182,8 @@ export class ChartView {
     ctx.fillStyle = SHEET;
     ctx.fillRect(0, 0, cssWidth, cssHeight);
 
-    const x0 = MARGIN;
+    const x0 = Math.max(MARGIN, Math.round((cssWidth - cell * chart.width) / 2));
+    this.x0 = x0;
     const y0 = MARGIN;
     const w = cell * chart.width;
     const h = cell * chart.height;

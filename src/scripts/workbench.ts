@@ -206,10 +206,24 @@ export function initWorkbench(root: HTMLElement) {
     }),
   );
 
+  // At "Fit", the whole chart fits the box, so it never needs a scrollbar.
+  // Matches the box's max-height in Workbench.astro: min(78svh, 900px).
+  const fitHeight = () => (zoom === 0 ? Math.floor(Math.min(innerHeight * 0.78, 900)) : null);
+  view.maxHeight = fitHeight();
+  addEventListener('resize', () => {
+    const h = fitHeight();
+    if (h === view.maxHeight) return;
+    view.maxHeight = h;
+    view.draw();
+  });
+
   const setZoom = (z: number) => {
     zoom = Math.max(0, Math.min(ZOOMS.length - 1, z));
     canvas.style.width = `${ZOOMS[zoom] * 100}%`;
     $('[data-zoom-label]')!.textContent = zoom === 0 ? 'Fit' : `${ZOOMS[zoom]}×`;
+    view.maxHeight = fitHeight();
+    view.draw();
+    updateHint();
   };
   $('[data-zoom="in"]')?.addEventListener('click', () => setZoom(zoom + 1));
   $('[data-zoom="out"]')?.addEventListener('click', () => setZoom(zoom - 1));

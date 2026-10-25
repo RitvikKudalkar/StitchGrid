@@ -210,6 +210,10 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     overflow: auto;
     max-height: min(78svh, 900px);
     overscroll-behavior: contain;
+    /* Keep the scrollbar's space whether or not it shows. Otherwise a chart a little taller
+       than the box makes the scrollbar appear, which narrows the chart so it fits, which
+       hides the scrollbar, which widens the chart again: a loop that made it flicker. */
+    scrollbar-gutter: stable;
   }
   .scroller canvas {
     display: block;
