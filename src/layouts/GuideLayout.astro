@@ -1,0 +1,142 @@
+---
+// A guide: headline, byline, a reading column, and a thread-coloured band that sends the
+// reader to the tool the guide supports. Article and breadcrumb structured data included.
+import { Image } from 'astro:assets';
+import Layout from './Layout.astro';
+import GuideList from '../components/GuideList.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { guideBySlug, guides } from '../data/guides';
+import { AUTHOR, SITE_NAME, SITE_URL } from '../data/site';
+import { toolBySlug } from '../data/tools';
+import { faqSchema, type Faq } from '../data/schema';
+
+interface Props {
+  slug: string;
+  faqs?: Faq[];
+}
+
+const { slug, faqs = [] } = Astro.props;
+const guide = guideBySlug(slug);
+const tool = toolBySlug(guide.tool);
+const url = `${SITE_URL}/guides/${slug}`;
+const others = guides.filter((g) => g.slug !== slug && g.tool === guide.tool);
+const date = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const schema: object[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.title,
+    description: guide.description,
+    url,
+    datePublished: guide.published,
+    dateModified: guide.modified ?? guide.published,
+    author: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url },
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    image: new URL(guide.picture.image.src, SITE_URL).href,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Guides', item: `${SITE_URL}/guides` },
+      { '@type': 'ListItem', position: 3, name: guide.title, item: url },
+    ],
+  },
+];
+if (faqs.length) schema.push(faqSchema(faqs));
+---
+
+<Layout title={`${guide.title} | ${SITE_NAME}`} description={guide.description} ogType="article" thread={{ color: tool.thread, ink: tool.threadInk }} schema={schema}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <article class="wrap pt-3xl">
+      <h1 class="display-xl guide-title">{guide.title}</h1>
+      <p class="mt-lg text-muted">In <a href="/guides" class="link">Guides</a>, by <a href="/about" class="link">{AUTHOR.name}</a>. Updated {date(guide.modified ?? guide.published)}.</p>
+
+      <div class="guide-grid mt-3xl">
+        <div class="article guide-body">
+          <figure class="lead-plate">
+            <Image src={guide.picture.image} alt={guide.picture.alt} widths={[640, 1100]} sizes="(min-width: 1000px) 68ch, 100vw" loading="eager" />
+            <figcaption class="small mt-xs">
+              {guide.picture.credit ? <a href={guide.picture.source} class="link">{guide.picture.credit}</a> : 'Example image.'}
+            </figcaption>
+          </figure>
+          <slot />
+          {faqs.length > 0 && (
+            <>
+              <h2 class="display-lg">Questions</h2>
+              {faqs.map((f) => <p><strong>{f.question}</strong> {f.answer}</p>)}
+            </>
+          )}
+        </div>
+        <aside class="guide-aside">
+          <a href={`/${tool.slug}`} class="thread-field tool-card">
+            <span class="display-lg">{tool.tab}</span>
+            <span class="mt-sm block">Turn your photo into a chart with a DMC thread list. Free, and your photo stays on your device.</span>
+            <span class="btn-primary mt-lg">Open the {tool.name.toLowerCase()}</span>
+          </a>
+        </aside>
+      </div>
+    </article>
+
+    {others.length > 0 && (
+      <section class="wrap section-gap more-guides">
+        <h2 class="display-lg">More guides</h2>
+        <GuideList guides={others} />
+      </section>
+    )}
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .guide-title {
+    font-size: clamp(2rem, 0.9rem + 4.4vw, 5.25rem);
+    max-width: 28ch;
+  }
+  .guide-grid {
+    display: grid;
+    gap: var(--spacing-3xl);
+  }
+  @media (min-width: 1000px) {
+    .guide-grid { grid-template-columns: minmax(0, 68ch) minmax(0, 1fr); gap: var(--spacing-4xl); }
+    .guide-aside { position: sticky; top: 24px; align-self: start; }
+  }
+  .guide-body :global(h2) { margin-bottom: 0.4em; }
+  .guide-body :global(h3) {
+    font-size: var(--step-lead);
+    font-weight: 500;
+    margin-top: 1.6em;
+  }
+  .guide-body :global(ol) { list-style: decimal; padding-left: 1.4em; }
+  .guide-body :global(ol > li + li) { margin-top: 0.6em; }
+  .guide-body :global(strong) { font-weight: 500; }
+  .guide-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step-small);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .guide-body :global(th),
+  .guide-body :global(td) {
+    padding: 10px 12px 10px 0;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-mat-raised);
+  }
+  .guide-body :global(th) { font-weight: 500; }
+  .guide-body :global(figure img) { display: block; width: 100%; height: auto; }
+  .tool-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--spacing-xl);
+  }
+  .tool-card .btn-primary { pointer-events: none; }
+  .more-guides { margin-bottom: var(--spacing-section); }
+</style>

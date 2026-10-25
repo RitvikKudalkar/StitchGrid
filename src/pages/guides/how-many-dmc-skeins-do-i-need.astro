@@ -1,0 +1,66 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import { skeinsNeeded, stitchesPerSkein } from '../../engine/stats';
+import type { Faq } from '../../data/schema';
+
+const round50 = (n: number) => Math.round(n / 50) * 50;
+const nf = new Intl.NumberFormat('en');
+const rows = [11, 14, 16, 18].map((count) => ({
+  count,
+  per: [1, 2, 3].map((s) => nf.format(round50(stitchesPerSkein(count, s)))),
+}));
+const examples = [500, 2000, 5000, 12000];
+
+const faqs: Faq[] = [
+  { question: 'How long is a skein of DMC thread?', answer: 'A skein of DMC stranded cotton is 8 metres (about 8.7 yards) of six strands twisted together.' },
+  { question: 'How many stitches does one skein make?', answer: 'About 1,950 full cross stitches on 14-count Aida with two strands, by our estimate. It varies with your tension and how far you travel on the back.' },
+  { question: 'Should I buy extra skeins?', answer: 'For the two or three colours that cover the most stitches, yes: buy one extra. Dye lots can differ, so matching a colour halfway through a large area is risky.' },
+];
+---
+
+<GuideLayout slug="how-many-dmc-skeins-do-i-need" faqs={faqs}>
+  <p class="lead">One skein of DMC stranded cotton covers about 1,950 full cross stitches on 14-count Aida with two strands. To estimate thread for a chart, count the stitches in each colour and divide by how far a skein goes on your fabric.</p>
+
+  <h2 class="display-lg">What's in a skein</h2>
+  <p>A skein of DMC stranded cotton is 8 metres (about 8.7 yards) of six strands. You cut a working length, separate the strands, and stitch with one, two or three of them depending on the fabric. Two strands on 14-count is the usual choice, so one skein gives you three working batches of two strands over its full length.</p>
+
+  <h2 class="display-lg">How far one skein goes</h2>
+  <p>Each full cross stitch uses two diagonals on the front, plus thread travelling on the back to the next stitch, plus waste for starting and ending. Our estimate allows 40% extra for that. Here's how many stitches one skein covers:</p>
+  <table>
+    <thead><tr><th scope="col">Fabric</th><th scope="col">1 strand</th><th scope="col">2 strands</th><th scope="col">3 strands</th></tr></thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr><td>{r.count}-count</td>{r.per.map((p) => <td>about {p}</td>)}</tr>
+      ))}
+    </tbody>
+  </table>
+  <p>These are estimates. Tight tension, long jumps across the back and lots of short thread runs all use more. Confetti-heavy charts (many scattered single stitches) can use half as much again.</p>
+
+  <h2 class="display-lg">Estimating for a whole chart</h2>
+  <ol>
+    <li>Count the stitches in each colour. The key from a pattern maker does this for you.</li>
+    <li>Divide each count by the number from the table for your fabric and strands.</li>
+    <li>Round up. Even 20 stitches of a colour need a whole skein.</li>
+  </ol>
+  <p>For example, on 14-count with two strands:</p>
+  <table>
+    <thead><tr><th scope="col">Stitches in one colour</th><th scope="col">Skeins to buy</th></tr></thead>
+    <tbody>
+      {examples.map((n) => (
+        <tr><td>{nf.format(n)}</td><td>{skeinsNeeded(n, 14, 2)}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <p>The <a href="/cross-stitch-pattern-maker">cross stitch pattern maker</a> shows this for every thread as you change the fabric and strands, and prints it on the key in the PDF.</p>
+
+  <h2 class="display-lg">When to buy extra</h2>
+  <ul>
+    <li><strong>Your biggest colours.</strong> Buy one extra skein of the two or three colours with the most stitches, typically the background and the main shades.</li>
+    <li><strong>Large single-colour areas.</strong> Dye lots vary slightly between batches. Buying all of a colour at once avoids a visible line where a new skein starts.</li>
+    <li><strong>Three strands or 11-count.</strong> Thicker stitching uses thread fast, so the estimate has less room for error.</li>
+  </ul>
+  <p>You don't need extra for colours with only a few hundred stitches. One skein will be plenty.</p>
+
+  <h2 class="display-lg">Saving thread</h2>
+  <p>Stitch in rows, working half crosses one way and coming back to complete them. It uses less thread than finishing each cross before moving on. Keep working lengths to about 45 cm (18 inches): longer lengths tangle and wear thin. And avoid jumping more than an inch across the back; end the thread and start again instead.</p>
+</GuideLayout>

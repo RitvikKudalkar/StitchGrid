@@ -40,10 +40,12 @@ const description = 'Who makes StitchGrid and why: free, private tools that turn
             <Image src={archive.berlinChart.image} alt={archive.berlinChart.alt} widths={[480, 960]} sizes="(min-width: 900px) 40vw, 100vw" class="plate" />
             <figcaption class="small mt-xs"><a href={archive.berlinChart.source} class="link">{archive.berlinChart.credit}</a></figcaption>
           </figure>
-          <figure>
-            <Image src={archive.sampler.image} alt={archive.sampler.alt} widths={[480, 960]} sizes="(min-width: 900px) 40vw, 100vw" class="plate" />
-            <figcaption class="small mt-xs"><a href={archive.sampler.source} class="link">{archive.sampler.credit}</a></figcaption>
-          </figure>
+          {(['sampler1791', 'sampler', 'flossBox'] as const).map((key) => (
+            <figure>
+              <Image src={archive[key].image} alt={archive[key].alt} widths={[480, 960]} sizes="(min-width: 900px) 40vw, 100vw" class="plate" />
+              <figcaption class="small mt-xs"><a href={archive[key].source} class="link">{archive[key].credit}</a></figcaption>
+            </figure>
+          ))}
         </div>
       </div>
     </section>

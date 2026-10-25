@@ -1,0 +1,32 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import GuideList from '../../components/GuideList.astro';
+import { guides } from '../../data/guides';
+import { toolBySlug } from '../../data/tools';
+
+const title = 'Cross Stitch Guides | StitchGrid';
+const description = 'Practical guides to turning photos into cross stitch patterns: Aida counts, how many skeins to buy, and charting by hand in Photoshop.';
+const byTool = [...new Set(guides.map((g) => g.tool))].map((slug) => ({ tool: toolBySlug(slug), guides: guides.filter((g) => g.tool === slug) }));
+---
+
+<Layout title={title} description={description}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-3xl pb-5xl reveal-children">
+      <h1 class="display-xl">Guides</h1>
+      <p class="lead mt-lg max-w-[46ch]">How to get from a photo to a finished piece: choosing fabric, buying thread and reading your chart.</p>
+
+      {byTool.map(({ tool, guides: list }) => (
+        <div class="mt-4xl reveal-children">
+          <h2 class="display-lg">{tool.tab}</h2>
+          <GuideList guides={list} />
+        </div>
+      ))}
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
