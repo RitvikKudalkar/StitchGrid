@@ -3,6 +3,7 @@
 import type { ImageMetadata } from 'astro';
 import { archive } from './archive';
 import { examples } from './examples';
+import { renders } from './renders';
 
 export interface GuidePicture {
   image: ImageMetadata;
@@ -25,6 +26,7 @@ export interface Guide {
 }
 
 const cat = examples.find((e) => e.id === 'cat')!;
+const minecraftHouse = renders('minecraft').find((r) => r.id === 'house')!;
 
 export const guides: Guide[] = [
   {
@@ -58,6 +60,14 @@ export const guides: Guide[] = [
     tool: 'cross-stitch-pattern-maker',
     picture: archive.berlinChart,
     published: '2026-10-25',
+  },
+  {
+    slug: 'how-to-build-pixel-art-in-minecraft',
+    title: 'How to build pixel art in Minecraft',
+    description: 'Plan, gather and build Minecraft pixel art in survival: picking blocks, counting stacks, building a wall row by row and fixing mistakes.',
+    tool: 'minecraft-pixel-art-generator',
+    picture: { image: minecraftHouse.image, alt: minecraftHouse.alt },
+    published: '2026-10-26',
   },
 ];
 

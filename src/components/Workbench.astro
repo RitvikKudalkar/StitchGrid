@@ -1,49 +1,66 @@
 ---
-// The chart sheet and its key slip (execution-plan.md §7.5). Shows an example already charted,
-// so the first screen is never an empty box. With `tool`, it adds the options, the views,
-// photo upload (pick, drop or paste) and the exports. The photo never leaves the device.
+// The chart sheet and its key slip (execution-plan.md §7.5), shared by every craft. Shows an
+// example already charted, so the first screen is never an empty box. With `tool`, it adds the
+// settings, the views, editing, photo upload (pick, drop or paste) and the downloads. With
+// several `crafts` (the homepage), a switch re-charts the same photo for each craft.
+// The photo never leaves the device.
+import { crafts as allCrafts, type CraftId } from '../data/crafts';
 import { examples } from '../data/examples';
 import { SITE_URL } from '../data/site';
+import { inSentence, toolBySlug } from '../data/tools';
 
 interface Props {
-  /** Cells across to start with. */
+  /** The first is shown; more than one shows the craft switch. */
+  crafts: CraftId[];
+  /** The full tool: settings, editing, upload and downloads. */
+  tool?: boolean;
+  /** Fixed size for a showcase (the homepage), whatever the craft. */
   cellsWide?: number;
   colours?: number;
-  /** The full tool: options, upload and export. */
-  tool?: boolean;
-  /** What one cell is called. */
-  unit?: string;
-  /** Palette brand, shown before thread codes. */
-  brand?: string;
-  fabricCount?: number;
-  pdfTitle?: string;
 }
 
-const { cellsWide = 64, colours = 12, tool = false, unit = 'stitches', brand = 'DMC', fabricCount = 14, pdfTitle = 'Cross stitch pattern' } = Astro.props;
+const { crafts: craftIds, tool = false, cellsWide, colours } = Astro.props;
+const crafts = craftIds.map((id) => allCrafts[id]);
+const craft = crafts[0];
 const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.src }));
+const slugFor: Record<CraftId, string> = { 'cross-stitch': 'cross-stitch-pattern-maker', 'pixel-art': 'pixel-art-converter', minecraft: 'minecraft-pixel-art-generator' };
+const has = (e: string) => craft.exports.includes(e as never);
 ---
 
 <div
   class:list={['workbench', { 'is-tool': tool }]}
   data-workbench
+  data-crafts={JSON.stringify(crafts)}
   data-cells={cellsWide}
   data-colours={colours}
-  data-unit={unit}
-  data-brand={brand}
-  data-fabric={fabricCount}
+  data-fixed-size={cellsWide ? '' : undefined}
   data-site={SITE_URL.replace('https://', '')}
-  data-pdf-title={pdfTitle}
   data-samples={JSON.stringify(samples)}
-  data-skeins={tool ? '' : undefined}
   data-paste={tool ? '' : undefined}
 >
+  {crafts.length > 1 && (
+    <div class="craft-switch" role="group" aria-label="Chart the same photo as">
+      {crafts.map((c, i) => {
+        const t = toolBySlug(slugFor[c.id]);
+        return (
+          <button type="button" data-craft={c.id} aria-pressed={i === 0 ? 'true' : 'false'} data-href={`/${t.slug}`} data-link-label={`Open the ${inSentence(t.name)}`}>
+            {c.label}
+          </button>
+        );
+      })}
+    </div>
+  )}
+
   <figure class="sheet chart-sheet" data-ui data-drop data-chart-sheet>
     {tool && (
       <div class="chart-bar">
-        <div class="seg" role="group" aria-label="Chart view">
-          <button type="button" data-mode="colour" aria-pressed="true">Colour</button>
-          <button type="button" data-mode="symbols" aria-pressed="false">Symbols</button>
-          <button type="button" data-mode="made" aria-pressed="false">As made</button>
+        {craft.views.length > 1 && (
+          <div class="seg" role="group" aria-label="Chart view">
+            {craft.views.map((v, i) => <button type="button" data-mode={v.id} aria-pressed={i === 0 ? 'true' : 'false'}>{v.label}</button>)}
+          </div>
+        )}
+        <div class="seg">
+          <button type="button" data-edit aria-pressed="false">Edit</button>
         </div>
         <div class="seg" role="group" aria-label="Zoom">
           <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
@@ -52,8 +69,19 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
         </div>
       </div>
     )}
+    {tool && (
+      <div class="edit-bar" data-edit-bar hidden>
+        <div class="seg" role="group" aria-label="Editing tool">
+          <button type="button" data-tool="paint" aria-pressed="true">Paint</button>
+          <button type="button" data-tool="fill" aria-pressed="false">Replace all</button>
+          <button type="button" data-tool="erase" aria-pressed="false">Erase</button>
+        </div>
+        <button type="button" class="undo" data-undo disabled>Undo</button>
+        <p class="small edit-help">Pick a colour in the key, then paint on the chart. Replace all swaps every cell of the colour you click. Changing a setting redraws the chart; Undo brings your edits back.</p>
+      </div>
+    )}
     <div class="scroller" data-scroller>
-      <canvas data-chart role="img" aria-label="Cross stitch chart of an example image"></canvas>
+      <canvas data-chart role="img" aria-label="Chart of an example image"></canvas>
       <p class="tip small" data-tip hidden></p>
     </div>
     <figcaption class="sample-row">
@@ -65,7 +93,19 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
       </div>
     </figcaption>
     <p class="small status" role="status" aria-live="polite" data-status></p>
-    {tool && <p class="small status" data-zoom-hint hidden>Zoom in with + to read the symbols.</p>}
+    {tool && craft.views.some((v) => v.id === 'symbols') && <p class="small status" data-zoom-hint hidden>Zoom in with + to read the symbols.</p>}
+    {tool && craft.layers && (
+      <div class="layer-panel" data-layer-panel hidden>
+        <div class="layer-head">
+          <p class="title" data-layer-label></p>
+          <div class="seg">
+            <button type="button" data-layer="down" aria-label="Row below">Down</button>
+            <button type="button" data-layer="up" aria-label="Row above">Up</button>
+          </div>
+        </div>
+        <ol class="layer-runs small tabular" data-layer-runs></ol>
+      </div>
+    )}
     {tool && <p class="drop-hint" data-drop-hint hidden>Drop the photo to chart it</p>}
   </figure>
 
@@ -78,33 +118,51 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
         </label>
         <p class="small muted">Or drop or paste one on the chart. It stays on this device.</p>
 
+        {craft.palettes.length > 1 && (
+          <label class="control">
+            <span class="control-label">{craft.blockFilters ? 'Blocks' : 'Palette'}</span>
+            <select class="field" data-option="palette">
+              {craft.palettes.map((p, i) => <option value={i}>{p.label}</option>)}
+            </select>
+          </label>
+        )}
         <label class="control">
-          <span class="control-label">Width <output class="tabular" data-output="cellsWide">{cellsWide}</output> {unit}</span>
-          <input type="range" min="30" max="300" step="1" value={cellsWide} data-option="cellsWide" />
+          <span class="control-label">Width <output class="tabular" data-output="cellsWide">{craft.width.value}</output> {craft.unit}</span>
+          <input type="range" min={craft.width.min} max={craft.width.max} step="1" value={craft.width.value} data-option="cellsWide" />
         </label>
         <label class="control">
-          <span class="control-label">Up to <output class="tabular" data-output="maxColors">{colours}</output> colours</span>
-          <input type="range" min="2" max="60" step="1" value={colours} data-option="maxColors" />
+          <span class="control-label">Up to <output class="tabular" data-output="maxColors">{craft.colours.value}</output> {craft.id === 'minecraft' ? 'kinds of block' : 'colours'}</span>
+          <input type="range" min={craft.colours.min} max={craft.colours.max} step="1" value={craft.colours.value} data-option="maxColors" />
         </label>
-        <label class="control">
-          <span class="control-label">Fabric</span>
-          <select class="field" data-option="fabric">
-            {[11, 14, 16, 18].map((c) => <option value={c} selected={c === fabricCount}>{c}-count Aida</option>)}
-          </select>
-        </label>
+        {craft.fabric && (
+          <label class="control">
+            <span class="control-label">Fabric</span>
+            <select class="field" data-option="fabric">
+              {[11, 14, 16, 18].map((c) => <option value={c} selected={c === 14}>{c}-count Aida</option>)}
+            </select>
+          </label>
+        )}
+        {craft.blockFilters && (
+          <>
+            <label class="check"><input type="checkbox" checked data-option="survival" /> Survival-friendly (no diamond, gold or other precious blocks)</label>
+            <label class="check"><input type="checkbox" checked data-option="gravity" /> No falling blocks (sand, gravel, concrete powder)</label>
+          </>
+        )}
 
         <details class="more">
           <summary>More settings</summary>
-          <label class="control">
-            <span class="control-label">Strands</span>
-            <select class="field" data-option="strands">
-              <option value="1">1 strand</option>
-              <option value="2" selected>2 strands</option>
-              <option value="3">3 strands</option>
-            </select>
-          </label>
-          <label class="check"><input type="checkbox" checked data-option="cleanup" /> Remove lone stitches</label>
-          <label class="check"><input type="checkbox" data-option="background" /> Leave the background unstitched</label>
+          {craft.fabric && (
+            <label class="control">
+              <span class="control-label">Strands</span>
+              <select class="field" data-option="strands">
+                <option value="1">1 strand</option>
+                <option value="2" selected>2 strands</option>
+                <option value="3">3 strands</option>
+              </select>
+            </label>
+          )}
+          <label class="check"><input type="checkbox" checked data-option="cleanup" /> Remove lone {craft.unit}</label>
+          <label class="check"><input type="checkbox" data-option="background" /> Leave the background empty</label>
           <label class="check"><input type="checkbox" data-option="dither" /> Blend colours (dithering)</label>
           <label class="control">
             <span class="control-label">Brightness <output class="tabular" data-output="brightness">0</output></span>
@@ -118,31 +176,56 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
       </form>
     )}
 
-    <aside class="slip key" aria-label="Thread key">
-      <p class="title">Key</p>
-      <p class="small muted mt-xxs">Point at a thread to see where it goes.</p>
-      <div class:list={['key-head small', { 'with-skeins': tool }]} aria-hidden="true">
-        <span></span><span>{brand}</span><span>Name</span><span>Stitches</span>{tool && <span>Skeins</span>}
-      </div>
-      <ul class:list={['key-list tabular', { 'with-skeins': tool }]} data-key-list></ul>
+    <aside class="slip key" aria-label={craft.id === 'minecraft' ? 'Block list' : 'Colour key'}>
+      <p class="title">{craft.id === 'minecraft' ? 'Blocks' : 'Key'}</p>
+      <p class="small muted mt-xxs">Point at a colour to see where it goes.</p>
+      <div class="key-head small" data-key-head aria-hidden="true"></div>
+      <ul class="key-list tabular" data-key-list></ul>
       <p class="key-total tabular" data-summary></p>
+      {crafts.length > 1 && (
+        <a class="btn-primary w-full mt-lg" href={`/${toolBySlug(slugFor[craft.id]).slug}`} data-craft-link>Open the {inSentence(toolBySlug(slugFor[craft.id]).name)}</a>
+      )}
       {tool && (
         <div class="exports">
-          <button type="button" class="btn-primary w-full" data-export="pdf">Download the PDF chart</button>
-          <div class="export-opts">
-            <label class="small">Paper
-              <select class="field field-sm" data-paper>
-                <option value="a4">A4</option>
-                <option value="letter">Letter</option>
-              </select>
-            </label>
-            <label class="check small"><input type="checkbox" data-bw /> Black and white</label>
-          </div>
-          <div class="flex gap-xs">
-            <button type="button" class="btn-secondary flex-1" data-export="png">Image</button>
-            <button type="button" class="btn-secondary flex-1" data-export="csv">Thread list</button>
-          </div>
-          <p class="small muted">Skein counts are estimates. Screen colours are close matches to real thread, not exact.</p>
+          {craft.layers && <label class="check"><input type="checkbox" data-layers /> Build it row by row</label>}
+          {has('pdf') && (
+            <>
+              <button type="button" class="btn-primary w-full" data-export="pdf">Download the PDF chart</button>
+              <div class="export-opts">
+                <label class="small">Paper
+                  <select class="field field-sm" data-paper>
+                    <option value="a4">A4</option>
+                    <option value="letter">Letter</option>
+                  </select>
+                </label>
+                <label class="check small"><input type="checkbox" data-bw /> Black and white</label>
+              </div>
+            </>
+          )}
+          {has('png-scaled') && (
+            <>
+              <label class="control">
+                <span class="control-label">Each pixel <output class="tabular" data-scale-out>8</output> px wide</span>
+                <input type="range" min="1" max="32" step="1" value="8" data-scale />
+              </label>
+              <label class="check small"><input type="checkbox" data-png-grid /> Grid lines in the image</label>
+              <button type="button" class="btn-primary w-full" data-export="png-scaled">Download the image</button>
+              <button type="button" class="btn-secondary w-full" data-export="png-1x">Download at 1 pixel each</button>
+            </>
+          )}
+          {craft.id === 'minecraft' && <button type="button" class="btn-primary w-full" data-export="csv">Download the block list</button>}
+          {craft.id === 'cross-stitch' && (
+            <div class="flex gap-xs">
+              <button type="button" class="btn-secondary flex-1" data-export="png">Image</button>
+              <button type="button" class="btn-secondary flex-1" data-export="csv">Thread list</button>
+            </div>
+          )}
+          {craft.id === 'minecraft' && <button type="button" class="btn-secondary w-full" data-export="png">Download the chart image</button>}
+          <p class="small muted">
+            {craft.id === 'cross-stitch' && 'Skein counts are estimates. Screen colours are close matches to real thread, not exact.'}
+            {craft.id === 'minecraft' && 'Block colours are averages of each block\'s texture. Unofficial; not affiliated with Mojang.'}
+            {craft.id === 'pixel-art' && 'Images download as PNG, with crisp edges at any size.'}
+          </p>
         </div>
       )}
     </aside>
@@ -159,6 +242,7 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
   @media (min-width: 900px) {
     .workbench { grid-template-columns: minmax(0, 1fr) 340px; }
     .is-tool { grid-template-columns: minmax(0, 1fr) 380px; }
+    .craft-switch { grid-column: 1 / -1; }
   }
   .side {
     display: flex;
@@ -166,25 +250,54 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     gap: var(--spacing-md);
   }
 
+  /* ---------- Craft switch (homepage) ---------- */
+  .craft-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .craft-switch button {
+    min-height: 44px;
+    padding: 8px 18px;
+    background: var(--color-sheet);
+    color: var(--color-sheet-ink);
+    font-weight: 500;
+    cursor: pointer;
+    clip-path: polygon(0 100%, 0 var(--tab-cut), var(--tab-cut) 0, calc(100% - var(--tab-cut)) 0, 100% var(--tab-cut), 100% 100%);
+    transition: transform 160ms var(--ease-out);
+  }
+  .craft-switch button:active { transform: scale(0.97); }
+  .craft-switch button[aria-pressed='true'] {
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+  .craft-switch button:focus-visible { outline: 3px solid currentColor; outline-offset: -7px; }
+
   /* ---------- Sheet ---------- */
   .chart-sheet {
     position: relative;
     padding: 12px;
   }
-  .chart-bar {
+  .chart-bar,
+  .edit-bar {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
     gap: 8px;
     padding: 2px 2px 10px;
   }
+  .edit-bar { justify-content: flex-start; }
+  .edit-bar[hidden] { display: none; }
+  .edit-help { flex-basis: 100%; }
   .seg {
     display: flex;
     align-items: center;
     gap: 2px;
   }
   .seg button,
-  .sample {
+  .sample,
+  .undo {
     min-height: 40px;
     min-width: 40px;
     padding: 6px 14px;
@@ -193,13 +306,16 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     cursor: pointer;
     transition: transform 160ms var(--ease-out);
   }
+  .undo:disabled { opacity: 0.5; cursor: default; }
   .seg button:active,
-  .sample:active { transform: scale(0.96); }
+  .sample:active,
+  .undo:active { transform: scale(0.96); }
   .seg button[aria-pressed='true'],
   .sample[aria-pressed='true'] {
     background: var(--color-sheet-ink);
     color: var(--color-sheet);
   }
+  .is-editing canvas { cursor: crosshair; touch-action: none; }
   .zoom-label {
     min-width: 40px;
     text-align: center;
@@ -252,6 +368,40 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
   }
   .drop-hint[hidden] { display: none; }
 
+  /* ---------- Row by row ---------- */
+  .layer-panel {
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--color-sheet-raised);
+  }
+  .layer-panel[hidden] { display: none; }
+  .layer-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .layer-head .seg button { background: var(--color-sheet); }
+  .layer-runs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 10px;
+    max-height: 9em;
+    overflow-y: auto;
+  }
+  .layer-runs :global(li) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .layer-runs :global(.run-swatch) {
+    width: 14px;
+    height: 14px;
+  }
+  .layer-runs :global(.run-empty) { background: var(--color-sheet); }
+
   /* ---------- Settings ---------- */
   .settings {
     display: flex;
@@ -295,6 +445,7 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     cursor: pointer;
   }
   .check input {
+    flex: none;
     width: 20px;
     height: 20px;
     accent-color: var(--color-sheet-ink);
@@ -319,18 +470,17 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
   .key-head,
   .key-list :global(.key-row) {
     display: grid;
-    grid-template-columns: 26px 44px minmax(0, 1fr) auto;
+    grid-template-columns: var(--key-cols, 26px 44px minmax(0, 1fr) auto);
     align-items: center;
     gap: 10px;
   }
-  .with-skeins.key-head,
-  .with-skeins :global(.key-row) { grid-template-columns: 26px 44px minmax(0, 1fr) auto 36px; }
   .key-head {
     margin-top: var(--spacing-md);
     padding: 0 6px 4px;
     font-weight: 500;
   }
-  .key-head span:nth-child(n + 4) { text-align: right; }
+  .key-head :global(.r),
+  .key-list :global(.r) { text-align: right; }
   .key-list {
     display: flex;
     flex-direction: column;
@@ -338,8 +488,13 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     max-height: 420px;
     overflow-y: auto;
   }
+  .key-list :global(.key-item) {
+    display: flex;
+    gap: 2px;
+  }
   .key-list :global(.key-row) {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     min-height: 40px;
     padding: 4px 6px;
     text-align: left;
@@ -348,6 +503,16 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
   }
   .key-list :global(.key-row:hover),
   .key-list :global(.key-row[aria-pressed='true']) { background: var(--color-sheet-raised); }
+  .is-editing .key-list :global(.key-row[aria-pressed='true']) {
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+  .key-list :global(.key-merge) {
+    padding: 0 10px;
+    font-size: var(--step-small);
+    background: var(--color-sheet-raised);
+    cursor: pointer;
+  }
   .key-list :global(.key-sym) {
     display: grid;
     place-items: center;
@@ -359,8 +524,6 @@ const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.sr
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .key-list :global(.key-count),
-  .key-list :global(.key-skeins) { text-align: right; }
   .key-total {
     margin-top: var(--spacing-md);
     padding: 10px 12px;

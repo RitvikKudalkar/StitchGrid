@@ -1,14 +1,11 @@
 ---
-// A plain bar: wordmark, the live tools, About, and the theme switch.
+// A plain bar: wordmark, the live tools, Guides, About and the theme switch. On narrow
+// screens the tools and About fold into a small Tools menu.
 import Mark from './Mark.astro';
 import { liveTools } from '../data/tools';
 
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const links = [
-  ...liveTools.map((t) => ({ href: `/${t.slug}`, label: t.tab })),
-  { href: '/guides', label: 'Guides' },
-  { href: '/about', label: 'About' },
-];
+const toolLinks = liveTools.map((t) => ({ href: `/${t.slug}`, label: t.tab, full: t.name }));
 ---
 
 <header id="site-header" class="wrap flex items-center justify-between gap-md py-md">
@@ -18,9 +15,18 @@ const links = [
   </a>
 
   <nav aria-label="Main" class="flex items-center gap-md sm:gap-lg">
-    {links.map((l) => (
-      <a href={l.href} class="nav-link" aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
+    {toolLinks.map((l) => (
+      <a href={l.href} class="nav-link wide-only" aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
     ))}
+    <details class="tools-menu narrow-only">
+      <summary class="nav-link">Tools</summary>
+      <ul class="menu sheet">
+        {toolLinks.map((l) => <li><a href={l.href} aria-current={path === l.href ? 'page' : undefined}>{l.full}</a></li>)}
+        <li><a href="/about">About</a></li>
+      </ul>
+    </details>
+    <a href="/guides" class="nav-link" aria-current={path.startsWith('/guides') ? 'page' : undefined}>Guides</a>
+    <a href="/about" class="nav-link wide-only" aria-current={path === '/about' ? 'page' : undefined}>About</a>
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark mat">
       <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
         <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-width="2" />
@@ -43,10 +49,35 @@ const links = [
     padding-block: 10px;
     white-space: nowrap;
   }
-  /* About is in the footer; on a phone the bar keeps the tools and guides. */
-  @media (max-width: 479px) {
-    .nav-link[href="/about"] { display: none; }
+  @media (max-width: 899px) {
+    .wide-only { display: none; }
   }
+  @media (min-width: 900px) {
+    .narrow-only { display: none; }
+  }
+  .tools-menu { position: relative; }
+  .tools-menu summary {
+    display: block;
+    cursor: pointer;
+    list-style: none;
+  }
+  .tools-menu summary::-webkit-details-marker { display: none; }
+  .tools-menu[open] summary { text-decoration: underline; text-decoration-thickness: 2px; }
+  .menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 50;
+    min-width: 16rem;
+    padding: 8px;
+  }
+  .tools-menu:not([open]) .menu { display: none; }
+  .menu a {
+    display: block;
+    padding: 10px 12px;
+  }
+  .menu a:hover,
+  .menu a[aria-current='page'] { background: var(--color-sheet-raised); }
   .nav-link:hover,
   .nav-link[aria-current='page'] {
     text-decoration: underline;

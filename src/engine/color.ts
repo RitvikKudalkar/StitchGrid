@@ -37,6 +37,21 @@ export function rgbToLab([r, g, b]: RGB): Lab {
   return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
 }
 
+const fInv = (t: number) => (t ** 3 > 216 / 24389 ? t ** 3 : (116 * t - 16) / (24389 / 27));
+const toGamma = (v: number) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
+
+/** Lab back to sRGB, clamped to 0–255. Used where colours are free rather than from a palette. */
+export function labToRgb([L, a, b]: Lab): RGB {
+  const fy = (L + 16) / 116;
+  const x = XN * fInv(fy + a / 500);
+  const y = YN * fInv(fy);
+  const z = ZN * fInv(fy - b / 200);
+  const R = x * 3.2404542 - y * 1.5371385 - z * 0.4985314;
+  const G = -x * 0.969266 + y * 1.8760108 + z * 0.041556;
+  const B = x * 0.0556434 - y * 0.2040259 + z * 1.0572252;
+  return [R, G, B].map((v) => Math.max(0, Math.min(255, Math.round(toGamma(v))))) as RGB;
+}
+
 const DEG = Math.PI / 180;
 const POW25_7 = 25 ** 7;
 

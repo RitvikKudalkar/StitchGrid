@@ -8,7 +8,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { guideBySlug, guides } from '../data/guides';
 import { AUTHOR, SITE_NAME, SITE_URL } from '../data/site';
-import { toolBySlug } from '../data/tools';
+import { inSentence, toolBySlug } from '../data/tools';
 import { faqSchema, type Faq } from '../data/schema';
 
 interface Props {
@@ -76,8 +76,8 @@ if (faqs.length) schema.push(faqSchema(faqs));
         <aside class="guide-aside">
           <a href={`/${tool.slug}`} class="thread-field tool-card">
             <span class="display-lg">{tool.tab}</span>
-            <span class="mt-sm block">Turn your photo into a chart with a DMC thread list. Free, and your photo stays on your device.</span>
-            <span class="btn-primary mt-lg">Open the {tool.name.toLowerCase()}</span>
+            <span class="mt-sm block">{tool.pitch}</span>
+            <span class="btn-primary mt-lg">Open the {inSentence(tool.name)}</span>
           </a>
         </aside>
       </div>

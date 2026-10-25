@@ -1,0 +1,139 @@
+---
+// "Square plate, spare text": one example photo large, tabs to switch it, advice on charting it,
+// and two actions. "Chart this example" loads it into the workbench above.
+import { Image } from 'astro:assets';
+import { examples } from '../../data/examples';
+
+interface Props {
+  heading: string;
+  /** Settings and advice for each example id. */
+  advice: Record<string, { settings: string; text: string }>;
+}
+
+const { heading, advice } = Astro.props;
+---
+
+<section class="wrap section-gap examples" aria-labelledby="examples-title">
+  <div class="examples-plate">
+    {examples.map((e, i) => (
+      <Image src={e.image} alt={e.alt} widths={[480, 960]} sizes="(min-width: 900px) 45vw, 100vw" class="plate-img" data-plate={e.id} hidden={i !== 0} />
+    ))}
+  </div>
+  <div class="examples-text">
+    <div class="example-tabs" role="tablist" aria-label="Example photos">
+      {examples.map((e, i) => (
+        <button type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} data-example={e.id} class="example-tab">
+          <Image src={e.image} alt="" widths={[120]} sizes="60px" class="tab-thumb" />
+          <span>{e.label}</span>
+        </button>
+      ))}
+    </div>
+    <div>
+      <h2 id="examples-title" class="display-lg">{heading}</h2>
+      {examples.map((e, i) => (
+        <div data-advice={e.id} hidden={i !== 0} class="mt-lg">
+          <p class="title">{advice[e.id].settings}</p>
+          <p class="mt-sm max-w-[44ch]">{advice[e.id].text}</p>
+        </div>
+      ))}
+    </div>
+    <div class="example-actions">
+      <button type="button" class="action-cell action-ink" data-chart-example>Chart this example</button>
+      <button type="button" class="action-cell action-tone" data-open-file>Use your own photo</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .examples {
+    display: grid;
+    gap: var(--spacing-xl);
+  }
+  @media (min-width: 900px) {
+    .examples { grid-template-columns: 1fr 1fr; min-height: 80svh; align-items: stretch; }
+  }
+  .examples-plate {
+    align-self: start;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+  .plate-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .plate-img[hidden] { display: none; }
+  .examples-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--spacing-xl);
+  }
+  .example-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .example-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px 4px 4px;
+    background: var(--color-mat-raised);
+    cursor: pointer;
+    transition: transform 160ms var(--ease-out);
+  }
+  .example-tab:active { transform: scale(0.97); }
+  .example-tab[aria-selected='true'] {
+    background: var(--color-thread);
+    color: var(--color-thread-ink);
+  }
+  .tab-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+  }
+  [data-advice][hidden] { display: none; }
+  .example-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .action-cell {
+    min-height: 72px;
+    padding: 12px 18px;
+    text-align: left;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 160ms var(--ease-out);
+  }
+  .action-cell:active { transform: scale(0.98); }
+  .action-ink { background: var(--color-text); color: var(--color-mat); }
+  .action-tone { background: var(--color-mat-raised); }
+  @media (max-width: 899px) {
+    .action-cell { min-height: 60px; }
+    .example-actions { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  // Tabs swap the plate and its advice; the actions chart it or open the file picker.
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-example]')];
+  let current = tabs[0]?.dataset.example;
+  tabs.forEach((tab) =>
+    tab.addEventListener('click', () => {
+      current = tab.dataset.example!;
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+      document.querySelectorAll<HTMLElement>('[data-plate]').forEach((el) => (el.hidden = el.dataset.plate !== current));
+      document.querySelectorAll<HTMLElement>('[data-advice]').forEach((el) => (el.hidden = el.dataset.advice !== current));
+    }),
+  );
+  document.querySelector('[data-chart-example]')?.addEventListener('click', () => {
+    document.querySelector<HTMLButtonElement>(`[data-sample="${current}"]`)?.click();
+    document.querySelector('[data-chart-sheet]')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
+  document.querySelector('[data-open-file]')?.addEventListener('click', () => {
+    document.querySelector<HTMLInputElement>('[data-file]')?.click();
+  });
+</script>

@@ -1,0 +1,98 @@
+---
+// A tool page (execution-plan.md §6): the headline and promise, the workbench on the tool's
+// thread colour, then the page's own sections (the slot), the questions and the guides.
+// WebApplication, FAQPage and breadcrumb structured data included.
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import GuideList from '../components/GuideList.astro';
+import Workbench from '../components/Workbench.astro';
+import type { CraftId } from '../data/crafts';
+import { guides } from '../data/guides';
+import { faqSchema, toolSchemas, type Faq } from '../data/schema';
+import { toolBySlug } from '../data/tools';
+
+interface Props {
+  slug: string;
+  craft: CraftId;
+  title: string;
+  description: string;
+  /** The one-line promise under the headline. */
+  lead: string;
+  faqs: Faq[];
+}
+
+const { slug, craft, title, description, lead, faqs } = Astro.props;
+const tool = toolBySlug(slug);
+const toolGuides = guides.filter((g) => g.tool === slug);
+---
+
+<Layout
+  title={title}
+  description={description}
+  thread={{ color: tool.thread, ink: tool.threadInk }}
+  schema={[...toolSchemas({ path: `/${tool.slug}`, name: tool.name, description }), faqSchema(faqs)]}
+>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-lg">
+      <h1 class="display-xl tool-title">{tool.name}</h1>
+      <p class="lead mt-sm mb-xl max-w-[52ch]">{lead}</p>
+      <div class="thread-field bench">
+        <Workbench crafts={[craft]} tool />
+      </div>
+    </section>
+
+    <slot />
+
+    <section class="faq-field section-gap" aria-labelledby="faq-title">
+      <div class="wrap faq">
+        <h2 id="faq-title" class="display-lg">Questions</h2>
+        <div class="faq-text">
+          {faqs.map((f) => (
+            <p><strong>{f.question}</strong> {f.answer}</p>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {toolGuides.length > 0 && (
+      <section class="wrap section-gap guides-list" aria-labelledby="guides-title">
+        <h2 id="guides-title" class="display-lg">Guides</h2>
+        <GuideList guides={toolGuides} />
+      </section>
+    )}
+    {toolGuides.length === 0 && <div class="section-gap" />}
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .tool-title { font-size: clamp(3rem, 1rem + 7vw, 7.5rem); }
+  .bench { padding: clamp(8px, 1.5vw, 20px); }
+
+  /* FAQ: answers as reading text */
+  .faq-field {
+    background: var(--color-mat-raised);
+    padding-block: clamp(72px, 9vw, 144px);
+  }
+  .faq {
+    display: grid;
+    gap: var(--spacing-2xl);
+  }
+  @media (min-width: 900px) {
+    .faq { grid-template-columns: 3fr 9fr; }
+  }
+  .faq-text p + p { margin-top: 20px; }
+  .faq-text strong { font-weight: 500; }
+  @media (min-width: 900px) {
+    .faq-text {
+      columns: 2;
+      column-gap: 56px;
+    }
+    .faq-text p { break-inside: avoid; }
+  }
+  .guides-list { margin-bottom: var(--spacing-section); }
+</style>

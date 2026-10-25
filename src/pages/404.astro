@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 import GuideList from '../components/GuideList.astro';
 import StitchedWord from '../components/StitchedWord.astro';
 import { guides } from '../data/guides';
-import { liveTools } from '../data/tools';
+import { inSentence, liveTools } from '../data/tools';
 
 const title = 'Page not found | StitchGrid';
 const description = 'This page does not exist.';
@@ -23,7 +23,7 @@ const description = 'This page does not exist.';
         <h1 class="display-xl">Dropped stitch</h1>
         <p class="lead mt-lg max-w-[36ch]">This page doesn't exist. It may have moved, or the link has a typo. Pick up the thread from one of these instead.</p>
         <div class="flex flex-wrap gap-sm mt-xl">
-          {liveTools.map((t) => <a href={`/${t.slug}`} class="btn-primary">Open the {t.name.toLowerCase()}</a>)}
+          {liveTools.map((t) => <a href={`/${t.slug}`} class="btn-primary">Open the {inSentence(t.name)}</a>)}
           <a href="/" class="btn-secondary">Go to the homepage</a>
         </div>
       </div>

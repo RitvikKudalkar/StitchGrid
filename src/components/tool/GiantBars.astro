@@ -1,0 +1,112 @@
+---
+// "Giant word, filled bar rows": one word fills the column (FABRIC, STACKS, PALETTES), then
+// filled bars that open in place to a small table. Text after the bars goes in the slot.
+
+interface Bar {
+  label: string;
+  caption: string;
+  head: string[];
+  rows: string[][];
+}
+
+interface Props {
+  word: string;
+  intro: string;
+  bars: Bar[];
+  /** Which bar starts open. */
+  open?: number;
+}
+
+const { word, intro, bars, open = 0 } = Astro.props;
+---
+
+<section class="wrap section-gap giant-bars" aria-label={word}>
+  <h2 class="giant" style={`--letters: ${word.length}`}>{word}</h2>
+  <p class="mt-md">{intro}</p>
+  <div class="bars tabular">
+    {bars.map((b, i) => (
+      <details class="bar" open={i === open}>
+        <summary><span>{b.label}</span><span class="plus" aria-hidden="true"></span></summary>
+        <table class="bar-table">
+          <caption class="sr-only">{b.caption}</caption>
+          <thead><tr>{b.head.map((h) => <th scope="col">{h}</th>)}</tr></thead>
+          <tbody>
+            {b.rows.map((r) => <tr>{r.map((c) => <td>{c}</td>)}</tr>)}
+          </tbody>
+        </table>
+      </details>
+    ))}
+  </div>
+  <div class="mt-lg after"><slot /></div>
+</section>
+
+<style>
+  .giant-bars {
+    max-width: 640px;
+    container-type: inline-size;
+  }
+  .giant {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    /* Fills the column: tuned for words of five to eight capitals. */
+    font-size: min(44cqw, calc(260cqw / var(--letters, 6)));
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+  }
+  .bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .bar { background: var(--color-mat-raised); }
+  .bar summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 18px;
+    font-weight: 500;
+    cursor: pointer;
+    list-style: none;
+  }
+  .bar summary::-webkit-details-marker { display: none; }
+  .plus {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    transition: transform 200ms var(--ease-out);
+  }
+  .plus::before,
+  .plus::after {
+    content: '';
+    position: absolute;
+    inset: 7px 0;
+    background: currentColor;
+  }
+  .plus::after { transform: rotate(90deg); }
+  .bar[open] .plus { transform: rotate(45deg); }
+  /* No box at all while closed, so hidden rows are never measured as page text. */
+  .bar:not([open]) .bar-table { display: none; }
+  .bar-table {
+    width: 100%;
+    margin: 0 0 8px;
+    border-collapse: collapse;
+  }
+  .bar-table th,
+  .bar-table td {
+    padding: 8px 18px;
+    text-align: right;
+  }
+  .bar-table th:first-child,
+  .bar-table td:first-child { text-align: left; }
+  .bar-table th { font-weight: 500; }
+  .after :global(a) {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+  }
+</style>
+

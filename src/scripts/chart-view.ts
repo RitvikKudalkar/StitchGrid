@@ -46,6 +46,12 @@ export class ChartView {
   private highlightFrame = 0;
   private inks: string[] = [];
   mode: ChartMode = 'colour';
+  /** How "as made" looks: thread crosses on Aida, flat pixels, or blocks. */
+  craft: 'stitch' | 'pixel' | 'block' = 'stitch';
+  /** Symbols on coloured cells when zoomed in (charts for stitching). */
+  symbols = true;
+  /** A row to pick out for building row by row; the others are faded. */
+  layer: number | null = null;
   /** Cell size in CSS pixels after the last draw. */
   cell = 0;
   /** Left edge of the grid after the last draw; the grid is centred when it fits by height. */
@@ -191,11 +197,28 @@ export class ChartView {
     // Until a cell is stitched, the blurred photo shows through.
     if (this.revealed !== Infinity && this.blurred) ctx.drawImage(this.blurred, x0, y0, w, h);
 
-    if (this.mode === 'made') this.drawMade(x0, y0, cell);
+    if (this.mode !== 'made') this.drawCells(x0, y0, cell);
+    else if (this.craft === 'stitch') this.drawStitches(x0, y0, cell);
+    else if (this.craft === 'block') this.drawBlocks(x0, y0, cell);
     else this.drawCells(x0, y0, cell);
 
     if (this.mode !== 'made') this.drawGrid(x0, y0, w, h, cell);
-    this.drawNumbers(x0, y0, w, h, cell);
+    if (this.layer !== null) this.drawLayer(x0, y0, w, cell);
+    // Flat pixel art is a picture, not a chart: no numbers or arrows.
+    if (!(this.mode === 'made' && this.craft === 'pixel')) this.drawNumbers(x0, y0, w, h, cell);
+  }
+
+  /** Fades every row but the current layer and outlines it. */
+  private drawLayer(x0: number, y0: number, w: number, cell: number) {
+    const chart = this.chart!;
+    const { ctx } = this;
+    const top = y0 + this.layer! * cell;
+    ctx.fillStyle = 'rgba(236, 233, 224, 0.82)';
+    ctx.fillRect(x0, y0, w, top - y0);
+    ctx.fillRect(x0, top + cell, w, (chart.height - this.layer! - 1) * cell);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x0 - 1, top - 1, w + 2, cell + 2);
   }
 
   private alphaFor(color: number) {
@@ -219,9 +242,9 @@ export class ChartView {
     const chart = this.chart!;
     const groups = this.groups();
     const readable = cell >= MIN_SYMBOL_CELL;
-    const symbols = readable && (this.mode === 'symbols' || cell >= SYMBOLS_IN_COLOUR_FROM);
+    const symbols = readable && (this.mode === 'symbols' || (this.symbols && this.mode === 'colour' && cell >= SYMBOLS_IN_COLOUR_FROM));
     // Symbols too small to read would leave a blank sheet, so colour stands in until zoomed.
-    const fill = this.mode === 'colour' || !readable;
+    const fill = this.mode !== 'symbols' || !readable;
     const size = Math.ceil(cell);
     groups.forEach((cells, c) => {
       ctx_alpha(this.ctx, this.alphaFor(c));
@@ -240,8 +263,53 @@ export class ChartView {
     ctx_alpha(this.ctx, 1);
   }
 
+  /**
+   * Blocks seen face on: the block's average colour with a little texture (a 4 × 4 grain that
+   * is the same for every block of a colour) and a light top-left and dark bottom-right edge.
+   * No game textures are used.
+   */
+  private drawBlocks(x0: number, y0: number, cell: number) {
+    const chart = this.chart!;
+    const { ctx } = this;
+    const size = Math.ceil(cell);
+    const groups = this.groups();
+    groups.forEach((cells, c) => {
+      ctx_alpha(ctx, this.alphaFor(c));
+      ctx.fillStyle = chart.colors[c].hex;
+      ctx.beginPath();
+      for (const i of cells) ctx.rect(x0 + (i % chart.width) * cell, y0 + Math.floor(i / chart.width) * cell, size, size);
+      ctx.fill();
+    });
+    ctx_alpha(ctx, 1);
+    if (cell < 6) return;
+    const sub = cell / 4;
+    const light = new Path2D();
+    const dark = new Path2D();
+    groups.forEach((cells, c) => {
+      if (this.highlight !== null && c !== this.highlight && this.dim > 0.5) return;
+      for (const i of cells) {
+        const x = x0 + (i % chart.width) * cell;
+        const y = y0 + Math.floor(i / chart.width) * cell;
+        for (let g = 0; g < 16; g++) {
+          const h = grain(c, g);
+          if (h === 0) continue;
+          (h > 0 ? light : dark).rect(x + (g % 4) * sub, y + Math.floor(g / 4) * sub, sub + 0.5, sub + 0.5);
+        }
+        const e = Math.max(1, cell * 0.08);
+        light.rect(x, y, cell, e);
+        light.rect(x, y, e, cell);
+        dark.rect(x, y + cell - e, cell, e);
+        dark.rect(x + cell - e, y, e, cell);
+      }
+    });
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+    ctx.fill(light);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+    ctx.fill(dark);
+  }
+
   /** Cross stitches on Aida: a hole at every corner, two thread strokes per cell. */
-  private drawMade(x0: number, y0: number, cell: number) {
+  private drawStitches(x0: number, y0: number, cell: number) {
     const chart = this.chart!;
     const { ctx } = this;
     if (cell >= 4) {
@@ -325,11 +393,20 @@ export class ChartView {
     for (let r = every; r < chart.height; r += every) ctx.fillText(String(r), x0 - 6, y0 + r * cell);
 
     // Centre arrows: stitchers start from the middle of the chart.
+    if (this.craft !== 'stitch') return;
     const cx = x0 + w / 2;
     const cy = y0 + h / 2;
     triangle(ctx, cx - 5, y0 + h + 4, cx + 5, y0 + h + 4, cx, y0 + h + 12);
     triangle(ctx, x0 + w + 4, cy - 5, x0 + w + 4, cy + 5, x0 + w + 12, cy);
   }
+}
+
+/** A fixed grain per colour: +1 lighter, −1 darker, 0 plain, for 16 sub-squares of a block. */
+function grain(color: number, g: number) {
+  let h = (color * 374761393 + g * 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  const v = ((h ^ (h >>> 16)) >>> 0) % 5;
+  return v === 0 ? 1 : v === 1 ? -1 : 0;
 }
 
 function ctx_alpha(ctx: CanvasRenderingContext2D, a: number) {

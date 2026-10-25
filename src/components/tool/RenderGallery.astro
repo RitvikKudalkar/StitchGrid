@@ -1,0 +1,77 @@
+---
+// "Photo tiles with label strips": each render with a strip of facts attached like a swing tag,
+// and the original photo small in the corner of the strip. Strip colours rotate so neighbours
+// never match.
+import { Image } from 'astro:assets';
+import type { Render } from '../../data/renders';
+
+interface Props {
+  heading: string;
+  items: Render[];
+  /** Crisp, unsmoothed scaling for pixel images. */
+  pixelated?: boolean;
+}
+
+const { heading, items, pixelated = false } = Astro.props;
+---
+
+<section class="wrap section-gap" aria-labelledby="gallery-title">
+  <h2 id="gallery-title" class="display-lg mb-2xl">{heading}</h2>
+  <ul class="gallery reveal-children">
+    {items.map((r, i) => (
+      <li>
+        {pixelated
+          ? <img src={r.image.src} width={r.image.width} height={r.image.height} alt={r.alt} loading="lazy" decoding="async" class="tile-img pixelated" />
+          : <Image src={r.image} alt={r.alt} widths={[400, 800]} sizes="(min-width: 900px) 25vw, 50vw" class="tile-img" />}
+        <div class={`strip strip-${i % 4} tabular small`}>
+          <Image src={r.photo} alt={`The original ${r.label.toLowerCase()} example image`} widths={[96]} sizes="48px" class="strip-photo" />
+          <div class="strip-text">
+            <p class="strip-values">{r.facts.map((f) => <span>{f}</span>)}</p>
+            <p>{r.label}, example image</p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 8px;
+  }
+  @media (min-width: 900px) {
+    .gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 12px; }
+  }
+  .tile-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+  .pixelated { image-rendering: pixelated; }
+  .strip {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+  }
+  .strip-photo {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+  }
+  .strip-text { min-width: 0; }
+  .strip-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+  }
+  .strip-0 { background: #161c1a; color: #e3e2da; }
+  .strip-1 { background: #ece9e0; color: #1a201e; }
+  .strip-2 { background: #f0c419; color: #161c1a; }
+  .strip-3 { background: var(--color-thread); color: var(--color-thread-ink); }
+</style>

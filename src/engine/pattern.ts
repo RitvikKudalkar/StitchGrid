@@ -5,7 +5,7 @@ import { rgbToLab } from './color';
 import { clearBackground, removeConfetti } from './cleanup';
 import { EMPTY, mapToPalette } from './map-palette';
 import type { Palette } from './palette';
-import { choosePaletteColors } from './quantize';
+import { choosePaletteColors, freePalette } from './quantize';
 import { adjustCells, resizeToGrid, type Crop, type Pixels } from './resize';
 import { countCells } from './stats';
 
@@ -55,7 +55,8 @@ export interface Pattern {
 
 export { EMPTY };
 
-export function makePattern(src: Pixels, palette: Palette, options: PatternOptions): Pattern {
+/** With a null palette, colours are free: the image's own best colours, not a material's. */
+export function makePattern(src: Pixels, paletteOrFree: Palette | null, options: PatternOptions): Pattern {
   const grid = resizeToGrid(src, options.cellsWide, options.cellAspect, options.crop);
   adjustCells(grid, options.brightness, options.contrast);
   const { width, height } = grid;
@@ -70,7 +71,9 @@ export function makePattern(src: Pixels, palette: Palette, options: PatternOptio
     active.push(i);
   }
 
-  const chosen = choosePaletteColors(labs, Uint32Array.from(active), palette, options.maxColors);
+  const activeCells = Uint32Array.from(active);
+  const palette = paletteOrFree ?? freePalette(labs, activeCells, options.maxColors);
+  const chosen = paletteOrFree ? choosePaletteColors(labs, activeCells, palette, options.maxColors) : palette.colors.map((_, i) => i);
   const cells = mapToPalette(width, height, grid.rgb, empty, palette, chosen, options.dither);
   if (options.background === 'empty') clearBackground(cells, width, height);
   if (options.cleanup) removeConfetti(cells, width, height);

@@ -2,17 +2,32 @@
 // The photo arrives as pixels from this same tab and never leaves the device.
 
 import dmc from '../palettes/dmc.json';
-import { preparePalette, type Palette, type PaletteFile } from '../engine/palette';
+import minecraft from '../palettes/minecraft.json';
+import pico8 from '../palettes/pico8.json';
+import gameboy from '../palettes/gameboy.json';
+import nes from '../palettes/nes.json';
+import { preparePalette, type Palette, type PaletteFile, type PaletteFilter } from '../engine/palette';
 import { makePattern, type PatternOptions } from '../engine/pattern';
 import type { Pixels } from '../engine/resize';
 
-const files: Record<string, PaletteFile> = { dmc };
+const files: Record<string, PaletteFile> = { dmc, minecraft, pico8, gameboy, nes };
 const palettes = new Map<string, Palette>();
 let source: Pixels | null = null;
 
 export type WorkerRequest =
   | { type: 'load'; width: number; height: number; data: Uint8ClampedArray }
-  | { type: 'render'; id: number; palette: string; options: PatternOptions };
+  /** `palette` is a file id, or "free" for the image's own colours. */
+  | { type: 'render'; id: number; palette: string; filter?: PaletteFilter; options: PatternOptions };
+
+function paletteFor(id: string, filter?: PaletteFilter) {
+  const key = `${id}|${filter?.only?.join() ?? ''}|${filter?.without?.join() ?? ''}`;
+  let palette = palettes.get(key);
+  if (!palette) {
+    palette = preparePalette(files[id], filter);
+    palettes.set(key, palette);
+  }
+  return palette;
+}
 
 self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   const msg = e.data;
@@ -21,11 +36,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
     return;
   }
   if (!source) return;
-  let palette = palettes.get(msg.palette);
-  if (!palette) {
-    palette = preparePalette(files[msg.palette]);
-    palettes.set(msg.palette, palette);
-  }
+  const palette = msg.palette === 'free' ? null : paletteFor(msg.palette, msg.filter);
   const started = performance.now();
   const pattern = makePattern(source, palette, msg.options);
   const ms = performance.now() - started;
