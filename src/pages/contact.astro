@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { CONTACT_EMAIL, WEB3FORMS_ACCESS_KEY } from '../data/site';
+
+const title = 'Contact StitchGrid';
+const description = 'Report a problem with a pattern, suggest a craft or a thread brand, or ask a question about StitchGrid.';
+---
+
+<Layout title={title} description={description}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-3xl pb-5xl">
+      <h1 class="display-xl mb-lg">Contact</h1>
+      <p class="lead max-w-[44ch]">A chart that looks wrong, a thread brand you'd like added, a craft we're missing: I read every message and usually reply within a few days.</p>
+
+      <div class="contact-grid mt-4xl">
+        <div class="flex flex-col gap-md">
+          <h2 class="title">Email</h2>
+          <a href={`mailto:${CONTACT_EMAIL}`} class="lead link break-all">{CONTACT_EMAIL}</a>
+          <p class="max-w-[40ch]">If a pattern looks wrong, say which tool, the size and number of colours you chose, and your browser. Please don't attach private photos; a description is enough.</p>
+        </div>
+
+        <form id="contact-form" action="https://api.web3forms.com/submit" method="post" class="sheet p-lg sm:p-xl flex flex-col gap-lg">
+          <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
+          <input type="hidden" name="from_name" value="StitchGrid contact form" />
+          <!-- Honeypot field for spam bots; Web3Forms rejects submissions where it is checked. -->
+          <input type="checkbox" name="botcheck" class="hidden" style="display: none;" tabindex="-1" autocomplete="off" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+            <label class="flex flex-col gap-xxs">
+              <span>Your name</span>
+              <input type="text" name="name" required class="field" autocomplete="name" />
+            </label>
+            <label class="flex flex-col gap-xxs">
+              <span>Your email</span>
+              <input type="email" name="email" required class="field" autocomplete="email" />
+            </label>
+          </div>
+          <label class="flex flex-col gap-xxs">
+            <span>About</span>
+            <select name="topic" class="field">
+              <option>A pattern looks wrong</option>
+              <option>Suggest a craft or thread brand</option>
+              <option>A guide needs correcting</option>
+              <option>Something else</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-xxs">
+            <span>Message</span>
+            <textarea name="message" rows="6" required class="field"></textarea>
+          </label>
+          <button type="submit" class="btn-primary self-start" data-submit>Send message</button>
+          <p class="small" role="status" aria-live="polite" data-status></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: var(--spacing-3xl);
+  }
+  @media (min-width: 900px) {
+    .contact-grid { grid-template-columns: 5fr 7fr; align-items: start; }
+  }
+  .sheet .field { background: #dcd8cc; border-color: #dcd8cc; }
+</style>
+
+<script>
+  import { CONTACT_EMAIL } from '../data/site';
+
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const submit = form?.querySelector<HTMLButtonElement>('[data-submit]');
+  const status = form?.querySelector<HTMLElement>('[data-status]');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    data.set('subject', `[StitchGrid] ${data.get('topic')} from ${data.get('name')}`);
+    if (submit) {
+      submit.disabled = true;
+      submit.textContent = 'Sending…';
+    }
+    try {
+      const res = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body: data });
+      const result = await res.json().catch(() => ({ success: false }));
+      if (res.ok && result.success) {
+        form.reset();
+        if (status) status.textContent = 'Message sent. I\'ll reply to the email you gave.';
+      } else if (status) {
+        status.textContent = `The message didn't send. Email ${CONTACT_EMAIL} instead.`;
+      }
+    } catch {
+      if (status) status.textContent = `No connection. Check your internet and try again, or email ${CONTACT_EMAIL}.`;
+    } finally {
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = 'Send message';
+      }
+    }
+  });
+</script>

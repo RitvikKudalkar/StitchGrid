@@ -1,0 +1,92 @@
+---
+// The homepage hero (execution-plan.md §7.4): a stack of folders, each with a trapezoid tab in
+// its own thread colour. Back folders link to their section; the front folder is open and holds
+// its content in the slot.
+
+interface Folder {
+  label: string;
+  href: string;
+  color: string;
+  ink: string;
+  /** Tab position from the left edge, as a percentage. */
+  tabAt: number;
+}
+
+interface Props {
+  back: Folder[];
+  front: Omit<Folder, 'href'>;
+}
+
+const { back, front } = Astro.props;
+---
+
+<div class="stack">
+  <nav aria-label="Sections">
+    {back.map((f, i) => (
+      <a href={f.href} class="folder back" style={`--c: ${f.color}; --ink: ${f.ink}; --x: ${f.tabAt}%`}>
+        <span class="tab" data-reveal style={`--i: ${i}`}>{f.label}</span>
+      </a>
+    ))}
+  </nav>
+  <div class="folder front" style={`--c: ${front.color}; --ink: ${front.ink}; --x: ${front.tabAt}%`}>
+    <span class="tab" aria-hidden="true" data-reveal style={`--i: ${back.length}`}>{front.label}</span>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .stack {
+    width: min(100%, 1280px);
+    margin-inline: auto;
+    padding-top: 40px;
+  }
+  @media (min-width: 900px) {
+    .stack { width: min(86%, 1280px); }
+  }
+  .folder {
+    position: relative;
+    display: block;
+    background: var(--c);
+    color: var(--ink);
+  }
+  .back {
+    height: 52px;
+    transition: transform 200ms var(--ease-out);
+  }
+  .back:hover,
+  .back:focus-visible { transform: translateY(-6px); }
+  .back:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: -6px;
+  }
+  .tab {
+    position: absolute;
+    bottom: 100%;
+    left: var(--x);
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 4px 22px 0;
+    background: var(--c);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: var(--step-body);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    clip-path: polygon(var(--tab-cut) 0, calc(100% - var(--tab-cut)) 0, 100% 100%, 0 100%);
+  }
+  .front {
+    padding: var(--spacing-lg) clamp(16px, 3vw, 32px) var(--spacing-xl);
+  }
+  @media (min-width: 900px) {
+    .back { height: 52px; }
+    .tab {
+      height: 40px;
+      padding-inline: 28px;
+      font-size: var(--step-lead);
+    }
+    .front { padding: var(--spacing-xl); }
+  }
+</style>

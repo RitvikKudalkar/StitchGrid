@@ -1,0 +1,58 @@
+---
+// The back of the folder: the name stitched large in every craft's thread, then the links.
+// Every live tool and guide page is listed here.
+import StitchedWord from './StitchedWord.astro';
+import { GA_ID } from '../data/site';
+import { liveTools, tools } from '../data/tools';
+
+const threads = [...new Set(tools.map((t) => t.thread))];
+---
+
+<footer class="mt-auto w-full raised">
+  <div class="wrap pt-5xl pb-xl">
+    <StitchedWord text="StitchGrid" threads={threads} />
+
+    <div class="grid grid-cols-2 lg:grid-cols-12 gap-x-lg gap-y-3xl mt-4xl reveal-children">
+      <div class="lg:col-span-4 flex flex-col gap-sm">
+        <p class="title">Tools</p>
+        {liveTools.map((t) => <a href={`/${t.slug}`} class="footer-link">{t.name}</a>)}
+      </div>
+
+      <div class="lg:col-span-4 flex flex-col gap-sm">
+        <p class="title">StitchGrid</p>
+        <a href="/about" class="footer-link">About</a>
+        <a href="/contact" class="footer-link">Contact</a>
+        <a href="/privacy-policy" class="footer-link">Privacy Policy</a>
+        <a href="/terms" class="footer-link">Terms of Use</a>
+        {GA_ID && <button type="button" id="consent-settings-btn" class="footer-link text-left cursor-pointer">Cookie settings</button>}
+      </div>
+
+      <div class="col-span-2 lg:col-span-4 flex flex-col gap-sm">
+        <p class="title">Your photos stay with you</p>
+        <p class="max-w-[40ch]">Every pattern is made inside your browser. Nothing is uploaded, and nothing is stored on a server.</p>
+        <p class="small text-muted max-w-[40ch]">Thread, bead and brick colours on screen are close matches, not exact. Check against a real colour card before you buy.</p>
+      </div>
+    </div>
+
+    <div class="mt-4xl flex flex-col sm:flex-row sm:items-center justify-between gap-md">
+      <p class="small">&copy; {new Date().getFullYear()} StitchGrid. Not affiliated with DMC, LEGO, Perler, Hama, Artkal or Mojang.</p>
+      <a href="#site-header" class="btn-secondary self-start" data-back-to-top>Back to top</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer-link {
+    font-size: var(--step-body);
+    width: fit-content;
+  }
+  .footer-link:hover { text-decoration: underline; text-decoration-thickness: 2px; }
+</style>
+
+<script>
+  document.querySelector('[data-back-to-top]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true });
+  });
+</script>

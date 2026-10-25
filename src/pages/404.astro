@@ -1,0 +1,43 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import StitchedWord from '../components/StitchedWord.astro';
+import { liveTools } from '../data/tools';
+
+const title = 'Page not found | StitchGrid';
+const description = 'This page does not exist.';
+---
+
+<Layout title={title} description={description}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-3xl pb-5xl not-found">
+      <div class="sheet p-xl">
+        <StitchedWord text="Oops" threads={['#9c2136', '#1a201e']} class="oops" />
+      </div>
+      <div>
+        <h1 class="display-xl">Dropped stitch</h1>
+        <p class="lead mt-lg max-w-[36ch]">This page doesn't exist. It may have moved, or the link has a typo.</p>
+        <div class="flex flex-wrap gap-sm mt-xl">
+          <a href="/" class="btn-primary">Go to the homepage</a>
+          {liveTools.map((t) => <a href={`/${t.slug}`} class="btn-secondary">{t.name}</a>)}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .not-found {
+    display: grid;
+    gap: var(--spacing-3xl);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .not-found { grid-template-columns: 5fr 7fr; }
+  }
+</style>

@@ -1,0 +1,68 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { archive } from '../data/archive';
+import { AUTHOR, CONTACT_EMAIL } from '../data/site';
+
+const title = 'About StitchGrid: Free Photo-to-Pattern Tools';
+const description = 'Who makes StitchGrid and why: free, private tools that turn your own photos into printable cross stitch and craft patterns.';
+---
+
+<Layout title={title} description={description}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-3xl pb-5xl">
+      <h1 class="display-xl mb-lg">About StitchGrid</h1>
+      <p class="lead max-w-[44ch]">Free tools that turn your own photo into a pattern you can print and make: a cross stitch chart first, then beads, bricks, blocks and yarn.</p>
+
+      <div class="about-grid mt-4xl">
+        <div class="article">
+          <h2 class="title">Why it exists</h2>
+          <p>Most photo-to-pattern tools ask you to upload your photo, sign up, or pay before you can download the chart. StitchGrid does the whole job in your browser instead. Your photo never leaves your device, there is no account, and the chart is yours to keep.</p>
+          <p>The idea is old. Two hundred years ago, Berlin publishers sold needlework charts painted by hand, square by square, on graph paper. StitchGrid does the same thing for a photo of your cat, your garden or your grandmother.</p>
+
+          <h2 class="title">Who makes it</h2>
+          <p>StitchGrid is built and written by <strong>{AUTHOR.name}</strong>, an independent web developer who also makes <a href="https://touchscreentester.com">TouchScreenTester</a>. I write the tools and the guides myself, and fix things based on what people who use them tell me.</p>
+
+          <h2 class="title">How the patterns are made</h2>
+          <p>Your photo is shrunk to the size of the chart, one cell per stitch, by averaging the colours in each cell. The colours are then reduced to the number you choose and matched to the nearest real thread by how different they look to the eye, not just by their numbers. Isolated single stitches are tidied away, because nobody wants to stitch a lone stitch in a sea of another colour.</p>
+          <p>Screen colours and real thread never match exactly, so every page says so, and the materials lists are estimates.</p>
+
+          <h2 class="title">Get in touch</h2>
+          <p>If a chart looks wrong, a thread match seems off or something doesn't work on your device, I'd like to know. Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> or use the <a href="/contact">contact page</a>.</p>
+        </div>
+
+        <div class="flex flex-col gap-3xl">
+          <figure>
+            <Image src={archive.berlinChart.image} alt={archive.berlinChart.alt} widths={[480, 960]} sizes="(min-width: 900px) 40vw, 100vw" class="plate" />
+            <figcaption class="small mt-xs"><a href={archive.berlinChart.source} class="link">{archive.berlinChart.credit}</a></figcaption>
+          </figure>
+          <figure>
+            <Image src={archive.sampler.image} alt={archive.sampler.alt} widths={[480, 960]} sizes="(min-width: 900px) 40vw, 100vw" class="plate" />
+            <figcaption class="small mt-xs"><a href={archive.sampler.source} class="link">{archive.sampler.credit}</a></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .about-grid {
+    display: grid;
+    gap: var(--spacing-4xl);
+  }
+  @media (min-width: 1000px) {
+    .about-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  }
+  .plate {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>

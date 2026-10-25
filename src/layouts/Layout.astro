@@ -1,0 +1,176 @@
+---
+import '../styles/app.css';
+import ConsentBanner from '../components/ConsentBanner.astro';
+import { GA_ID, SITE_NAME } from '../data/site';
+
+interface Props {
+	title: string;
+	description: string;
+	canonicalUrl?: string;
+	ogType?: 'website' | 'article';
+	ogImage?: string;
+	/** Thread colour of the page's craft (src/data/tools.ts). Defaults to cross stitch cranberry. */
+	thread?: { color: string; ink: string };
+	/** Structured data objects, emitted as JSON-LD. */
+	schema?: object[];
+}
+
+const { title, description, canonicalUrl, ogType = 'website', ogImage = '/og-image.png', thread, schema = [] } = Astro.props;
+
+// Ensure consistent canonical URLs (no trailing slash unless it's root, no query params)
+const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+const defaultCanonicalUrl = new URL(pathname, Astro.site ?? Astro.url).href;
+const finalCanonicalUrl = canonicalUrl
+	? new URL(canonicalUrl, Astro.site ?? Astro.url).href
+	: defaultCanonicalUrl;
+const ogImageUrl = new URL(ogImage, Astro.site ?? Astro.url).href;
+const threadStyle = thread ? `--color-thread: ${thread.color}; --color-thread-ink: ${thread.ink};` : undefined;
+---
+
+<!doctype html>
+<html lang="en" style={threadStyle}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" href="/favicon.ico" sizes="48x48" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content={ogType} />
+		<meta property="og:url" content={finalCanonicalUrl} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="StitchGrid: turn a photo into a printable craft pattern" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:url" content={finalCanonicalUrl} />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
+
+		<link rel="canonical" href={finalCanonicalUrl} />
+		<meta name="theme-color" content="#cfd8d1" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#161c1a" media="(prefers-color-scheme: dark)" />
+
+		<script is:inline>
+			// Dark mode initialization to prevent FOUC. Only an explicit toggle is stored;
+			// otherwise the page follows the OS setting, including later changes.
+			(() => {
+				const readStored = () => {
+					try {
+						const value = localStorage.getItem('theme');
+						return value === 'dark' || value === 'light' ? value : null;
+					} catch {
+						return null;
+					}
+				};
+				const media = window.matchMedia('(prefers-color-scheme: dark)');
+				const apply = (theme) => document.documentElement.setAttribute('data-theme', theme);
+				apply(readStored() ?? (media.matches ? 'dark' : 'light'));
+				media.addEventListener('change', (e) => {
+					if (!readStored()) apply(e.matches ? 'dark' : 'light');
+				});
+			})();
+		</script>
+
+		<link rel="preload" href="/fonts/bebas-neue-400.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="/fonts/eb-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+		{schema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+
+		{GA_ID && (
+			<>
+				<!-- Google tag (gtag.js) with Consent Mode v2 -->
+				<script is:inline define:vars={{ GA_ID }}>
+				  window.dataLayer = window.dataLayer || [];
+				  function gtag(){dataLayer.push(arguments);}
+				  window.gtag = gtag;
+
+				  // No analytics or ad cookies in the EEA, UK and Switzerland until the visitor opts in
+				  // through the consent banner. The more specific region default wins over the global one.
+				  gtag('consent', 'default', {
+				    ad_storage: 'denied',
+				    ad_user_data: 'denied',
+				    ad_personalization: 'denied',
+				    analytics_storage: 'denied',
+				    region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE','GB','CH']
+				  });
+				  gtag('consent', 'default', {
+				    ad_storage: 'granted',
+				    ad_user_data: 'granted',
+				    ad_personalization: 'granted',
+				    analytics_storage: 'granted'
+				  });
+				  try {
+				    const choice = localStorage.getItem('analytics-consent');
+				    if (choice === 'granted' || choice === 'denied') {
+				      gtag('consent', 'update', { analytics_storage: choice });
+				    }
+				  } catch {}
+
+				  gtag('js', new Date());
+				  gtag('config', GA_ID);
+				</script>
+				<script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+			</>
+		)}
+	</head>
+	<body>
+		<a href="#main" class="skip-link">Skip to content</a>
+		<div class="min-h-dvh flex flex-col">
+			<slot />
+		</div>
+		{GA_ID && <ConsentBanner />}
+		<script is:inline>
+			// Entrance motion: [data-reveal] parts rise in once as their section arrives.
+			// Content only hides once this has run, so it stays visible without script.
+			(() => {
+				if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+				document.querySelectorAll('.article > *, main .reveal-children > *').forEach((el) => {
+					if (el.hasAttribute('data-reveal')) return;
+					el.setAttribute('data-reveal', '');
+					const i = [...el.parentElement.children].indexOf(el);
+					el.style.setProperty('--i', String(i % 4));
+				});
+				const items = document.querySelectorAll('[data-reveal]');
+				if (!items.length) return;
+				document.documentElement.classList.add('js-reveal');
+				const io = new IntersectionObserver((entries) => {
+					entries.forEach((entry) => {
+						if (!entry.isIntersecting) return;
+						entry.target.classList.add('is-in');
+						io.unobserve(entry.target);
+					});
+				}, { rootMargin: '0px 0px -8% 0px' });
+				items.forEach((el) => {
+					if (el.getBoundingClientRect().top >= innerHeight) return io.observe(el);
+					// On the first screen, headlines show at once; the rest rise in as the page loads.
+					if (el.matches('h1, h1 *')) el.classList.add('is-in');
+					else requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-in')));
+				});
+			})();
+		</script>
+	</body>
+</html>
+
+<style is:global>
+	.skip-link {
+		position: absolute;
+		left: 16px;
+		top: -100px;
+		z-index: 100;
+		padding: 12px 20px;
+		background: var(--color-sheet);
+		color: var(--color-sheet-ink);
+	}
+	.skip-link:focus { top: 16px; }
+</style>

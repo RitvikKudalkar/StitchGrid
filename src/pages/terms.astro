@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { CONTACT_EMAIL } from '../data/site';
+
+const title = 'Terms of Use | StitchGrid';
+const description = 'The terms for using StitchGrid\'s free pattern tools: your photos and charts stay yours, colour matches are estimates, and the tools come as they are.';
+---
+
+<Layout title={title} description={description}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-3xl pb-5xl">
+      <h1 class="display-xl mb-lg">Terms of use</h1>
+      <p class="text-muted mb-3xl">Last updated: October 25, 2026</p>
+
+      <div class="article">
+        <p class="lead">By using StitchGrid you agree to these terms. They are short on purpose.</p>
+
+        <h2 class="title">Your photos and patterns</h2>
+        <p>You keep every right to the photos you use and the patterns you make. We never receive them, so we claim nothing over them. You may print, stitch, share or sell what you make. Only use photos you own or have permission to use.</p>
+
+        <h2 class="title">Using the tools</h2>
+        <p>The tools are free for personal and commercial use. Please don't try to disrupt the website, overload it, or pass off the website itself as your own.</p>
+
+        <h2 class="title">Colours and estimates</h2>
+        <p>Thread, bead, brick and yarn colours are matched as closely as a screen allows, but screens and real materials never look exactly alike. Skein counts, bead counts and finished sizes are estimates. Check against a physical colour card and buy a little extra before starting a large piece.</p>
+
+        <h2 class="title">Trademarks</h2>
+        <p>DMC, Anchor, LEGO, Perler, Hama, Artkal and Minecraft are trademarks of their owners. StitchGrid is independent and not affiliated with, endorsed or sponsored by any of them. Brand names are used only to describe compatible colours.</p>
+
+        <h2 class="title">No warranty</h2>
+        <p>The tools are provided as they are, without any warranty. To the extent the law allows, StitchGrid and its owner are not liable for any loss arising from using the website or its patterns, including materials bought on the basis of an estimate.</p>
+
+        <h2 class="title">Changes</h2>
+        <p>We may update these terms. The current version is always on this page. Questions: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
