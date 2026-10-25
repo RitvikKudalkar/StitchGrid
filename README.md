@@ -1,4 +1,4 @@
-# StitchGrid
+# PatternSquare
 
 Free, private tools that turn a photo into a printable craft pattern, starting with cross stitch. Everything runs in the browser; photos are never uploaded.
 

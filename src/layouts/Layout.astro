@@ -13,12 +13,15 @@ interface Props {
 	thread?: { color: string; ink: string };
 	/** Structured data objects, emitted as JSON-LD. */
 	schema?: object[];
+	/** Keep the page out of search results (the 404 page). */
+	noindex?: boolean;
 }
 
-const { title, description, canonicalUrl, ogType = 'website', ogImage = '/og-image.png', thread, schema = [] } = Astro.props;
+const { title, description, canonicalUrl, ogType = 'website', ogImage = '/og-image.png', thread, schema = [], noindex = false } = Astro.props;
 
-// Ensure consistent canonical URLs (no trailing slash unless it's root, no query params)
-const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+// Canonical URLs match what the worker serves: no ".html", no "/index", no trailing slash
+// (except the root), no query. The file build format hands pages over as "/about.html".
+const pathname = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '').replace(/\/$/, '') || '/';
 const defaultCanonicalUrl = new URL(pathname, Astro.site ?? Astro.url).href;
 const finalCanonicalUrl = canonicalUrl
 	? new URL(canonicalUrl, Astro.site ?? Astro.url).href
@@ -48,7 +51,7 @@ const threadStyle = thread ? `--color-thread: ${thread.color}; --color-thread-in
 		<meta property="og:image" content={ogImageUrl} />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
-		<meta property="og:image:alt" content="StitchGrid: turn a photo into a printable craft pattern" />
+		<meta property="og:image:alt" content="PatternSquare: turn a photo into a printable craft pattern" />
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
@@ -57,7 +60,7 @@ const threadStyle = thread ? `--color-thread: ${thread.color}; --color-thread-in
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImageUrl} />
 
-		<link rel="canonical" href={finalCanonicalUrl} />
+		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={finalCanonicalUrl} />}
 		<meta name="theme-color" content="#cfd8d1" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#161c1a" media="(prefers-color-scheme: dark)" />
 

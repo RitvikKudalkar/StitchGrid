@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
-  StitchGrid design system. See DESIGN.md and execution-plan.md §7.
+  PatternSquare design system. See DESIGN.md and execution-plan.md §7.
   A chart sheet lying on a cutting mat. The mat changes with the theme; the sheet is always paper,
   because it is what gets printed. One thread colour per craft. Surfaces are separated by tone,
   never by lines or shadows. Square corners, except the folder-tab corners on buttons and tabs.

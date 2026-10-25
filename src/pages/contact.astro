@@ -6,8 +6,8 @@ import { Image } from 'astro:assets';
 import { archive } from '../data/archive';
 import { CONTACT_EMAIL, WEB3FORMS_ACCESS_KEY } from '../data/site';
 
-const title = 'Contact StitchGrid';
-const description = 'Report a problem with a pattern, suggest a craft or a thread brand, or ask a question about StitchGrid.';
+const title = 'Contact PatternSquare';
+const description = 'Report a problem with a pattern, suggest a craft or a thread brand, or ask a question about PatternSquare.';
 ---
 
 <Layout title={title} description={description}>
@@ -31,7 +31,7 @@ const description = 'Report a problem with a pattern, suggest a craft or a threa
 
         <form id="contact-form" action="https://api.web3forms.com/submit" method="post" class="sheet p-lg sm:p-xl flex flex-col gap-lg reveal-children">
           <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
-          <input type="hidden" name="from_name" value="StitchGrid contact form" />
+          <input type="hidden" name="from_name" value="PatternSquare contact form" />
           <!-- Honeypot field for spam bots; Web3Forms rejects submissions where it is checked. -->
           <input type="checkbox" name="botcheck" class="hidden" style="display: none;" tabindex="-1" autocomplete="off" />
 
@@ -90,7 +90,7 @@ const description = 'Report a problem with a pattern, suggest a craft or a threa
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = new FormData(form);
-    data.set('subject', `[StitchGrid] ${data.get('topic')} from ${data.get('name')}`);
+    data.set('subject', `[PatternSquare] ${data.get('topic')} from ${data.get('name')}`);
     if (submit) {
       submit.disabled = true;
       submit.textContent = 'Sending…';

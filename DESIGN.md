@@ -1,4 +1,4 @@
-# StitchGrid design system
+# PatternSquare design system
 
 A chart sheet lying on a cutting mat. Every tool is the chart crafters print and pin beside their hoop; every other page is another piece of the same stationery: the folder, the key, the slip. The full reasoning is in `execution-plan.md` §7; the dealt direction is `.taste-skill/direction.json` ("The page is the object", seed 305097112). Tokens and component classes live in `src/styles/app.css`.
 
@@ -56,7 +56,7 @@ Sentence case. No eyebrow labels, no all-caps tracked labels, no 01/02/03, no "�
 ## Imagery
 
 - `src/assets/examples/`: example images for samples and the gallery. **Currently AI-generated test images**; replace with real photos before launch, keeping file names and crops. Always captioned "Example image".
-- `src/assets/archive/`: openly licensed needlework history (CC0 and CC BY), with credits in `credits.json` and `src/data/archive.ts`. Always credited next to the picture, never presented as StitchGrid's work. Each guide has a lead picture (`picture` in `src/data/guides.ts`), also used as its thumbnail.
+- `src/assets/archive/`: openly licensed needlework history (CC0 and CC BY), with credits in `credits.json` and `src/data/archive.ts`. Always credited next to the picture, never presented as PatternSquare's work. Each guide has a lead picture (`picture` in `src/data/guides.ts`), also used as its thumbnail.
 - The inspector counts a picture from 160 × 120 px up, so list thumbnails are that size on desktop.
 
 ## Motion

@@ -7,7 +7,7 @@ Stack: the same as touchscreentester.com, so everything carries over.
 - Auto-deploys from GitHub on push to `main`
 - `DESIGN.md` design tokens
 
-Domain: **not chosen yet.** See section 10.
+Domain: **patternsquare.com** (site name PatternSquare). See section 10.
 
 ## Goal
 
@@ -300,7 +300,7 @@ The dealt hero, the **tabbed folder stack**, fits this site exactly: crafters re
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│                          stitchgrid                   About  │
+│                        patternsquare                  About  │
 │                                                              │
 │                     PHOTO TO PATTERN                         │  ← Bebas, ~70% width
 │        Turn a photo into a chart you can print and stitch,   │
@@ -326,7 +326,7 @@ The tool comes first (section 6). The first screen is a **workbench**:
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│ stitchgrid                         Tools  Guides  About      │
+│ patternsquare                      Tools  Guides  About      │
 │ CROSS STITCH PATTERN MAKER                                   │  ← H1, Bebas, one line
 │ Free, private, no sign-up. Your photo stays on this device.  │
 │ ┌────────────────────────────────────┐ ┌──────────────────┐  │
@@ -399,7 +399,7 @@ The skill's floor is at least four real pictures per page. SVG drawings don't co
 The PDF is what people keep and pass around, so it carries the design too:
 - The cover is the front of the folder: the tool name in Bebas, the preview, and the key as the slip.
 - Chart pages use the same symbol paths as the screen.
-- Every page footer carries a small "Made free at stitchgrid.com" (or whichever domain you pick). Charts get shared in craft groups for years, so this is free brand reach.
+- Every page footer carries a small "Made free at patternsquare.com". Charts get shared in craft groups for years, so this is free brand reach.
 
 ### 7.10 House rules (checked automatically)
 
@@ -453,7 +453,7 @@ These lessons come from touchscreentester's AdSense rejection, so build them in 
 
 Effort assumes building with Claude Code. One branch and pull request per phase; never push straight to `main`.
 
-**Domain:** pick something broad enough for every craft, not cross-stitch-only. Examples of the style: `stitchgrid`, `patternfromphoto`, `pixelpattern`. Check availability, and avoid brand names (LEGO, Minecraft, DMC, Perler) in the domain.
+**Domain:** **patternsquare.com**, chosen 26 October 2026. The working name StitchGrid was dropped because stitchgrid.com belongs to an active apparel company. The name is broad enough for every craft (one square per stitch, pixel, block or bead) and avoids brand names (LEGO, Minecraft, DMC, Perler).
 
 ---
 

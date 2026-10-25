@@ -13,7 +13,7 @@ const out = path.join(root, 'src/assets/renders');
 fs.mkdirSync(out, { recursive: true });
 
 // Bundle the engine so plain Node can run it.
-const bundle = path.join(root, 'node_modules/.cache/stitchgrid-engine.mjs');
+const bundle = path.join(root, 'node_modules/.cache/patternsquare-engine.mjs');
 await build({
   stdin: {
     contents: `
