@@ -1,0 +1,66 @@
+---
+// Asks for analytics consent. Layout.astro sets Google Consent Mode to "denied" by default
+// for the EEA, UK and Switzerland; this banner is how those visitors opt in.
+---
+
+<div
+	id="consent-banner"
+	class="consent fixed bottom-4 inset-x-4 md:right-auto md:left-6 md:bottom-6 md:max-w-[28rem] z-[60] sheet p-lg"
+	role="region"
+	aria-label="Cookie consent"
+	hidden
+>
+	<p class="mb-md">
+		We'd like to use Google Analytics cookies to see which tools people use. Your photos never leave your device.{' '}
+		<a href="/privacy-policy" class="link">Privacy Policy</a>
+	</p>
+	<div class="flex flex-wrap gap-sm">
+		<button type="button" data-consent="granted" class="btn-primary">Allow analytics</button>
+		<button type="button" data-consent="denied" class="btn-secondary">No thanks</button>
+	</div>
+</div>
+
+<style>
+	/* It floats over the page, so it is the one place outside dialogs with a shadow. */
+	.consent { box-shadow: 0 20px 60px -20px rgb(0 0 0 / 0.35); } /* taste-skill-ignore: banner floats */
+</style>
+
+<script>
+	const STORAGE_KEY = 'analytics-consent';
+	const banner = document.getElementById('consent-banner');
+	const settingsBtn = document.getElementById('consent-settings-btn');
+	const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
+
+	function readChoice(): string | null {
+		try {
+			return localStorage.getItem(STORAGE_KEY);
+		} catch {
+			return null;
+		}
+	}
+
+	// The browser's timezone stands in for the visitor's region, which only Google's servers know.
+	// A visitor this misses keeps the consent-denied default, so the error is on the safe side.
+	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+	const inEurope = timeZone.startsWith('Europe/')
+		|| ['Atlantic/Reykjavik', 'Atlantic/Canary', 'Atlantic/Madeira', 'Atlantic/Azores', 'Atlantic/Faroe'].includes(timeZone);
+
+	if (banner && inEurope && !readChoice()) banner.hidden = false;
+
+	banner?.querySelectorAll<HTMLButtonElement>('[data-consent]').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const choice = btn.dataset.consent!;
+			try {
+				localStorage.setItem(STORAGE_KEY, choice);
+			} catch {
+				// Storage blocked: the choice still applies for this page view.
+			}
+			gtag?.('consent', 'update', { analytics_storage: choice });
+			banner.hidden = true;
+		});
+	});
+
+	settingsBtn?.addEventListener('click', () => {
+		if (banner) banner.hidden = false;
+	});
+</script>

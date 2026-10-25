@@ -1,0 +1,279 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FolderStack from '../components/FolderStack.astro';
+import Workbench from '../components/Workbench.astro';
+import { archive } from '../data/archive';
+import { examples } from '../data/examples';
+import { faqSchema, siteSchemas, type Faq } from '../data/schema';
+import { toolBySlug } from '../data/tools';
+
+const title = 'StitchGrid: Turn a Photo Into a Cross Stitch Pattern';
+const description = 'Free tools that turn your photo into a printable cross stitch chart with a thread list. Private: your photo never leaves your device.';
+
+const crossStitch = toolBySlug('cross-stitch-pattern-maker');
+
+// Each back folder lends its section its ground colour (execution-plan.md §7.4).
+const sections = {
+  examples: { label: 'Examples', color: '#7096e0', ink: '#161c1a' },
+  how: { label: 'How it works', color: '#86b34e', ink: '#161c1a' },
+  history: { label: 'An old idea', color: '#f4914a', ink: '#161c1a' },
+  questions: { label: 'Questions', color: '#e58fae', ink: '#161c1a' },
+};
+
+// Finished size of a 100-stitch-wide chart of each example on 14-count Aida.
+const inches = (stitches: number) => (stitches / 14).toFixed(1);
+const gallery = examples.map((e) => {
+  const w = 100;
+  const h = Math.round((e.image.height / e.image.width) * w);
+  return { ...e, w, h };
+});
+
+// The itinerary on the slip. Grouped by when it happens, so the order needs no numbers.
+const itinerary = [
+  { when: 'Tonight', rows: [['Choose a photo', '10 sec'], ['Set the size and colours', '1 min'], ['Download the chart', '5 sec']] },
+  { when: 'This weekend', rows: [['Buy the threads on the list', 'one trip'], ['Find the centre of your fabric', '2 min']] },
+  { when: 'After that', rows: [['Stitch from the centre outwards', 'your pace']] },
+];
+
+const faqs: Faq[] = [
+  { question: 'Is it free?', answer: 'Yes. Every tool is free to use, with no sign-up, no trial and no watermark on your chart.' },
+  { question: 'Are my photos uploaded?', answer: 'No. Your photo is turned into a chart inside your own browser. It is never sent to a server, so nobody else can see it.' },
+  { question: 'Which crafts does it work for?', answer: 'Cross stitch first. Bead, brick, pixel art, crochet and knitting charts use the same engine and will be added one craft at a time.' },
+  { question: 'What makes a good photo?', answer: 'One clear subject, good daylight and a plain background. Faces and pets work well when they fill most of the frame.' },
+  { question: 'How accurate are the thread colours?', answer: 'Each colour is matched to the closest thread, but screens and real thread never look exactly alike. Check against a printed colour card before you buy.' },
+  { question: 'Who owns the chart?', answer: 'You do. Charts made from your own photos are yours to stitch, share or sell. If the photo is someone else\'s, ask them first.' },
+];
+---
+
+<Layout title={title} description={description} schema={[...siteSchemas(), faqSchema(faqs)]}>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap hero">
+      <h1 class="display-xl hero-title">Photo to pattern</h1>
+      <p class="lead hero-lead">Turn a photo into a cross stitch chart you can print, with a thread list to shop from. Your photo never leaves this device.</p>
+
+      <FolderStack
+        back={[
+          { ...sections.examples, href: '#examples', tabAt: 4 },
+          { ...sections.how, href: '#how-it-works', tabAt: 26 },
+          { ...sections.history, href: '#an-old-idea', tabAt: 50 },
+          { ...sections.questions, href: '#questions', tabAt: 70 },
+        ]}
+        front={{ label: crossStitch.tab, color: crossStitch.thread, ink: crossStitch.threadInk, tabAt: 10 }}
+      >
+        <h2 class="sr-only">{crossStitch.name}</h2>
+        <div class="front-intro reveal-children">
+          <p class="lead max-w-[46ch]">Here is a cat, already charted. Point at a colour in the key to see where it goes, or chart your own photo.</p>
+          <a href={`/${crossStitch.slug}`} class="btn-primary">Choose a photo</a>
+        </div>
+        <Workbench cellsWide={64} colours={12} />
+      </FolderStack>
+    </section>
+
+    <section id="examples" class="field" style={`--c: ${sections.examples.color}; --ink: ${sections.examples.ink}`}>
+      <div class="wrap reveal-children">
+        <h2 class="display-lg mb-2xl">Examples</h2>
+        <ul class="gallery reveal-children">
+          {gallery.map((e, i) => (
+            <li class="tile">
+              <Image src={e.image} alt={e.alt} widths={[360, 720]} sizes="(min-width: 900px) 25vw, 50vw" class="tile-img" />
+              <div class={`strip strip-${i % 4} tabular small`}>
+                <p class="strip-values"><span>{e.w} × {e.h}</span><span>20 colours</span><span>14-count</span><span>{inches(e.w)} × {inches(e.h)} in</span></p>
+                <p class="strip-meta"><span>{e.label}</span><span>Example image</span></p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="field" style={`--c: ${sections.how.color}; --ink: ${sections.how.ink}`}>
+      <div class="wrap how reveal-children">
+        <div class="how-text">
+          <h2 class="display-lg">Two minutes to a chart</h2>
+          <p class="lead mt-lg max-w-[30ch]">Most of the time goes on choosing the photo. The rest takes about as long as threading a needle.</p>
+        </div>
+        <div class="slip itinerary tabular reveal-children">
+          {itinerary.map((g) => (
+            <div class="itinerary-group">
+              <p class="itinerary-when">{g.when}</p>
+              {g.rows.map(([what, time]) => (
+                <p class="itinerary-row"><span>{what}</span><span class="leader" aria-hidden="true"></span><span>{time}</span></p>
+              ))}
+            </div>
+          ))}
+          <p class="itinerary-result"><span>You hold a chart and a thread list</span><span>2 min</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="an-old-idea" class="field" style={`--c: ${sections.history.color}; --ink: ${sections.history.ink}`}>
+      <div class="wrap history reveal-children">
+        <figure class="history-plate">
+          <Image src={archive.berlinChart.image} alt={archive.berlinChart.alt} widths={[600, 1024]} sizes="(min-width: 900px) 50vw, 100vw" />
+        </figure>
+        <div class="history-text reveal-children">
+          <h2 class="display-lg">A 200-year-old idea</h2>
+          <p class="lead mt-lg">In the 1800s, Berlin publishers sold needlework charts painted by hand, square by square, on graph paper. Each square was one stitch.</p>
+          <p class="mt-md max-w-[46ch]">This one, with its bird, basket and nest of eggs, was published by A. Nicolai in Berlin. StitchGrid does the same job for your own photo, in about a second instead of a week of painting.</p>
+          <p class="small mt-lg max-w-[46ch]"><a href={archive.berlinChart.source} class="link">{archive.berlinChart.credit}</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="questions" class="field" style={`--c: ${sections.questions.color}; --ink: ${sections.questions.ink}`}>
+      <div class="wrap faq reveal-children">
+        <h2 class="display-lg">Questions</h2>
+        <div class="faq-text reveal-children">
+          {faqs.map((f) => (
+            <p><strong>{f.question}</strong> {f.answer}</p>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .hero {
+    padding-top: clamp(24px, 4vw, 56px);
+    text-align: center;
+  }
+  .hero-title { margin-inline: auto; }
+  .hero-lead {
+    max-width: 52ch;
+    margin: var(--spacing-md) auto clamp(32px, 4vw, 56px);
+  }
+  .front-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md) var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
+    text-align: left;
+  }
+
+  /* Sections take the colour of their folder. */
+  .field {
+    background: var(--c);
+    color: var(--ink);
+    padding-block: clamp(72px, 9vw, 144px);
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 8px;
+  }
+  @media (min-width: 900px) {
+    .gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 12px; }
+  }
+  .tile-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+  .strip {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+  }
+  .strip p {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px 8px;
+  }
+  /* Four colour pairs so neighbouring tags never match. */
+  .strip-0 { background: #161c1a; color: #e3e2da; }
+  .strip-1 { background: #ece9e0; color: #1a201e; }
+  .strip-2 { background: #f0c419; color: #161c1a; }
+  .strip-3 { background: #9c2136; color: #f6f3ec; }
+
+  .how {
+    display: grid;
+    gap: var(--spacing-3xl);
+  }
+  @media (min-width: 900px) {
+    .how { grid-template-columns: 5fr 6fr; align-items: start; }
+  }
+  .itinerary {
+    width: 100%;
+    max-width: 480px;
+    padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-lg) + 12px);
+    justify-self: center;
+  }
+  .itinerary-group + .itinerary-group { margin-top: 28px; }
+  .itinerary-when {
+    font-weight: 500;
+    font-size: var(--step-lead);
+    margin-bottom: 6px;
+  }
+  .itinerary-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-block: 4px;
+  }
+  .itinerary-row > span:last-child,
+  .itinerary-result > span:last-child { white-space: nowrap; }
+  .leader {
+    flex: 1;
+    min-width: 24px;
+    border-bottom: 4px dotted currentColor;
+    opacity: 0.45;
+  }
+  .itinerary-result {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    padding: 12px 14px;
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+
+  .history {
+    display: grid;
+    gap: var(--spacing-3xl);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .history { grid-template-columns: 1fr 1fr; }
+  }
+  .history-plate img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .faq {
+    display: grid;
+    gap: var(--spacing-2xl);
+  }
+  @media (min-width: 900px) {
+    .faq { grid-template-columns: 3fr 9fr; }
+  }
+  .faq-text {
+    max-width: 80ch;
+  }
+  .faq-text p + p { margin-top: 20px; }
+  .faq-text strong { font-weight: 500; }
+  @media (min-width: 900px) {
+    .faq-text {
+      columns: 2;
+      column-gap: 56px;
+    }
+    .faq-text p { break-inside: avoid; }
+  }
+</style>

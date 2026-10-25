@@ -1,0 +1,71 @@
+---
+// A plain bar: wordmark, the live tools, About, and the theme switch.
+import Mark from './Mark.astro';
+import { liveTools } from '../data/tools';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const links = [
+  ...liveTools.map((t) => ({ href: `/${t.slug}`, label: t.tab })),
+  { href: '/about', label: 'About' },
+];
+---
+
+<header id="site-header" class="wrap flex items-center justify-between gap-md py-md">
+  <a href="/" class="wordmark flex items-center gap-sm" aria-label="StitchGrid home">
+    <Mark size={30} />
+    <span>StitchGrid</span>
+  </a>
+
+  <nav aria-label="Main" class="flex items-center gap-md sm:gap-lg">
+    {links.map((l) => (
+      <a href={l.href} class="nav-link" aria-current={path === l.href ? 'page' : undefined}>{l.label}</a>
+    ))}
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark mat">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+        <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+        <path d="M11 2a9 9 0 0 1 0 18z" fill="currentColor" />
+      </svg>
+    </button>
+  </nav>
+</header>
+
+<style>
+  .wordmark {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    line-height: 1;
+    text-transform: uppercase;
+    padding-top: 3px;
+  }
+  .nav-link {
+    font-size: var(--step-body);
+    padding-block: 10px;
+  }
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+  .theme-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -11px;
+    cursor: pointer;
+    transition: transform 300ms var(--ease-out);
+  }
+  .theme-toggle:active { transform: rotate(180deg); }
+</style>
+
+<script>
+  document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Storage blocked: the switch still applies to this page view.
+    }
+  });
+</script>

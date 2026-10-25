@@ -1,0 +1,130 @@
+---
+// Phase 0 shell of the money page: the workbench and the fabric sizes. Phase 1 adds the engine,
+// the options panel, PDF export and the full content (execution-plan.md §5).
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Workbench from '../components/Workbench.astro';
+import { toolSchemas } from '../data/schema';
+import { toolBySlug } from '../data/tools';
+
+const tool = toolBySlug('cross-stitch-pattern-maker');
+const title = 'Cross Stitch Pattern Maker: Free, From Your Photo';
+const description = 'Turn any photo into a printable cross stitch pattern with a DMC thread list. Free, private and no sign-up: your photo never leaves your device.';
+
+const counts = [11, 14, 16, 18];
+const widths = [50, 100, 150, 200];
+const fabrics = counts.map((count) => ({
+  count,
+  rows: widths.map((w) => ({ w, inches: (w / count).toFixed(1), cm: ((w / count) * 2.54).toFixed(1) })),
+}));
+---
+
+<Layout
+  title={title}
+  description={description}
+  thread={{ color: tool.thread, ink: tool.threadInk }}
+  schema={toolSchemas({ path: `/${tool.slug}`, name: tool.name, description })}
+>
+  <Header />
+
+  <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
+    <section class="wrap pt-lg">
+      <h1 class="display-xl tool-title">{tool.name}</h1>
+      <p class="lead mt-sm mb-xl max-w-[52ch]">Free, private, no sign-up. Turn a photo into a chart you can print. Your photo stays on this device.</p>
+      <div class="thread-field bench">
+        <Workbench cellsWide={100} colours={20} upload unit={tool.unit} />
+      </div>
+    </section>
+
+    <section class="wrap section-gap fabric reveal-children">
+      <h2 class="giant">Fabric</h2>
+      <p class="mt-md">Aida is sold by count: the number of stitches in one inch. The same chart comes out smaller on a higher count.</p>
+      <div class="bars tabular reveal-children">
+        {fabrics.map((f, i) => (
+          <details class="bar" open={i === 1}>
+            <summary><span>{f.count}-count Aida</span><span class="plus" aria-hidden="true"></span></summary>
+            <table class="bar-table">
+              <caption class="sr-only">Finished width on {f.count}-count Aida</caption>
+              <thead><tr><th scope="col">Chart width</th><th scope="col">Inches</th><th scope="col">Centimetres</th></tr></thead>
+              <tbody>
+                {f.rows.map((r) => (
+                  <tr><td>{r.w} stitches</td><td>{r.inches} in</td><td>{r.cm} cm</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .tool-title { font-size: clamp(3rem, 1rem + 7vw, 7.5rem); }
+  .bench { padding: clamp(8px, 1.5vw, 20px); }
+
+  .fabric {
+    max-width: 640px;
+    container-type: inline-size;
+    margin-bottom: var(--spacing-section);
+  }
+  .giant {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 44cqw;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    color: var(--color-thread);
+  }
+  :root[data-theme='dark'] .giant { color: var(--color-text); }
+  .bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .bar { background: var(--color-mat-raised); }
+  .bar summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 0 18px;
+    font-weight: 500;
+    cursor: pointer;
+    list-style: none;
+  }
+  .bar summary::-webkit-details-marker { display: none; }
+  .plus {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    transition: transform 200ms var(--ease-out);
+  }
+  .plus::before,
+  .plus::after {
+    content: '';
+    position: absolute;
+    inset: 7px 0;
+    background: currentColor;
+  }
+  .plus::after { transform: rotate(90deg); }
+  .bar[open] .plus { transform: rotate(45deg); }
+  .bar-table {
+    width: 100%;
+    margin: 0 0 8px;
+    border-collapse: collapse;
+  }
+  .bar-table th,
+  .bar-table td {
+    padding: 8px 18px;
+    text-align: right;
+  }
+  .bar-table th:first-child,
+  .bar-table td:first-child { text-align: left; }
+  .bar-table th { font-weight: 500; }
+</style>

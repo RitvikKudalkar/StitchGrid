@@ -1,0 +1,32 @@
+---
+// Text set as real cross stitches from the bitmap alphabet: each letter in its own thread colour.
+import { crossPath, layoutStitches } from '../data/stitch-font';
+
+interface Props {
+  text: string;
+  /** Thread colours, used letter by letter in turn. */
+  threads: string[];
+  label?: string;
+  class?: string;
+}
+
+const { text, threads, label = text, class: className } = Astro.props;
+const { cells, width, height } = layoutStitches(text);
+const byThread = threads.map((_, i) =>
+  cells.filter((c) => c.letter % threads.length === i).map((c) => crossPath(c.x, c.y)).join(''),
+);
+---
+
+<svg class:list={['stitched-word', className]} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+  {byThread.map((d, i) => (
+    <path d={d} stroke={threads[i]} stroke-width="0.24" stroke-linecap="round" fill="none" />
+  ))}
+</svg>
+
+<style>
+  .stitched-word {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>

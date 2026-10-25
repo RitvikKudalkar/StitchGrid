@@ -1,0 +1,255 @@
+---
+// The chart sheet and its key slip (execution-plan.md §7.5). Shows an example already charted,
+// so the first screen is never an empty box; on tool pages the visitor can chart their own photo.
+// Everything happens in the browser. The photo is never uploaded.
+import { examples } from '../data/examples';
+
+interface Props {
+  /** Cells across. */
+  cellsWide?: number;
+  colours?: number;
+  /** Shows "Choose a photo" and accepts a photo dropped on the sheet. */
+  upload?: boolean;
+  /** What one cell is called. */
+  unit?: string;
+  /** Fabric count for the finished size, cross stitch only. */
+  fabricCount?: number;
+}
+
+const { cellsWide = 60, colours = 12, upload = false, unit = 'stitches', fabricCount = 14 } = Astro.props;
+const samples = examples.map((e) => ({ id: e.id, label: e.label, src: e.image.src }));
+---
+
+<div
+  class="workbench"
+  data-workbench
+  data-cells={cellsWide}
+  data-colours={colours}
+  data-unit={unit}
+  data-fabric={fabricCount}
+  data-samples={JSON.stringify(samples)}
+>
+  <figure class="sheet chart-sheet" data-ui data-drop>
+    <canvas data-chart role="img" aria-label="Cross stitch chart of the example image"></canvas>
+    <figcaption class="sample-row">
+      <span class="small muted">Example images</span>
+      <div class="flex flex-wrap gap-xs" role="group" aria-label="Choose an example image">
+        {samples.map((s, i) => (
+          <button type="button" class="sample" data-sample={s.id} aria-pressed={i === 0 ? 'true' : 'false'}>{s.label}</button>
+        ))}
+      </div>
+    </figcaption>
+    {upload && (
+      <p class="drop-hint" data-drop-hint hidden>Drop the photo to chart it</p>
+    )}
+  </figure>
+
+  <aside class="slip key" aria-label="Thread key">
+    <p class="title">Key</p>
+    <p class="small muted mt-xxs">Point at a colour to see where it goes.</p>
+    <ul class="key-list tabular" data-key-list></ul>
+    <p class="key-total tabular" data-key-total></p>
+    {upload && (
+      <div class="mt-lg flex flex-col gap-xs">
+        <label class="btn-primary w-full">
+          Choose a photo
+          <input type="file" accept="image/*" class="sr-only" data-file />
+        </label>
+        <p class="small muted">Or drop one on the chart. It stays on this device.</p>
+      </div>
+    )}
+  </aside>
+</div>
+
+<style>
+  .workbench {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .workbench { grid-template-columns: minmax(0, 1fr) 340px; }
+  }
+  .chart-sheet {
+    position: relative;
+    padding: 12px;
+  }
+  .chart-sheet canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .chart-sheet canvas[data-ready] { aspect-ratio: auto; }
+  .sample-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 12px 14px 4px;
+  }
+  .sample {
+    min-height: 40px;
+    padding: 6px 14px;
+    background: #dcd8cc;
+    font-size: var(--step-small);
+    cursor: pointer;
+    transition: transform 160ms var(--ease-out);
+  }
+  .sample:active { transform: scale(0.96); }
+  .sample[aria-pressed='true'] {
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+  .drop-hint {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--color-sheet) 88%, transparent);
+    font-size: var(--step-lead);
+  }
+  .drop-hint[hidden] { display: none; }
+
+  .key { padding: var(--spacing-lg); }
+  .key-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--spacing-md);
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .key-list :global(button) {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 40px;
+    padding: 4px 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 160ms var(--ease-out);
+  }
+  .key-list :global(button:hover),
+  .key-list :global(button[aria-pressed='true']) { background: #dcd8cc; }
+  .key-list :global(.swatch) {
+    width: 28px;
+    height: 28px;
+  }
+  .key-total {
+    margin-top: var(--spacing-md);
+    padding: 10px 12px;
+    background: var(--color-sheet-ink);
+    color: var(--color-sheet);
+  }
+</style>
+
+<script>
+  import { ChartView, type Chart } from '../scripts/chart-view';
+  import { previewChart } from '../scripts/preview-chart';
+
+  const MAX_SIDE = 4000;
+
+  document.querySelectorAll<HTMLElement>('[data-workbench]').forEach((root) => {
+    const canvas = root.querySelector<HTMLCanvasElement>('[data-chart]')!;
+    const list = root.querySelector<HTMLUListElement>('[data-key-list]')!;
+    const total = root.querySelector<HTMLElement>('[data-key-total]')!;
+    const view = new ChartView(canvas);
+    const cellsWide = Number(root.dataset.cells);
+    const colours = Number(root.dataset.colours);
+    const unit = root.dataset.unit!;
+    const fabric = Number(root.dataset.fabric);
+    const samples: { id: string; label: string; src: string }[] = JSON.parse(root.dataset.samples!);
+    const nf = new Intl.NumberFormat('en');
+    let pinned: number | null = null;
+
+    function renderKey(chart: Chart) {
+      list.replaceChildren(
+        ...chart.palette.map(([r, g, b], i) => {
+          const li = document.createElement('li');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('aria-pressed', 'false');
+          btn.innerHTML = `<span class="swatch" style="background: rgb(${r} ${g} ${b})"></span><span>Colour ${i + 1}</span><span>${nf.format(chart.counts[i])}</span>`;
+          btn.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' && pinned === null) view.setHighlight(i); });
+          btn.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' && pinned === null) view.setHighlight(null); });
+          btn.addEventListener('click', () => {
+            pinned = pinned === i ? null : i;
+            list.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-pressed', String(j === pinned)));
+            view.setHighlight(pinned);
+          });
+          li.append(btn);
+          return li;
+        }),
+      );
+      const inches = (cells: number) => (cells / fabric).toFixed(1);
+      total.textContent = `${chart.width} × ${chart.height} ${unit}, ${chart.palette.length} colours. ${inches(chart.width)} × ${inches(chart.height)} in on ${fabric}-count.`;
+    }
+
+    function chartSource(source: CanvasImageSource & { width: number; height: number }, label: string, stitchOut: boolean) {
+      pinned = null;
+      const chart = previewChart(source, cellsWide, colours);
+      canvas.setAttribute('data-ready', '');
+      canvas.setAttribute('aria-label', `Chart of ${label}: ${chart.width} by ${chart.height} ${unit} in ${chart.palette.length} colours`);
+      view.show(chart, source, stitchOut);
+      renderKey(chart);
+    }
+
+    async function loadSample(id: string, stitchOut: boolean) {
+      const s = samples.find((x) => x.id === id)!;
+      const img = new Image();
+      img.src = s.src;
+      await img.decode();
+      chartSource(img, `the example image (${s.label.toLowerCase()})`, stitchOut);
+      root.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sample === id)));
+    }
+
+    async function loadFile(file: File) {
+      if (!file.type.startsWith('image/')) return;
+      // Decoded here, in this tab. Nothing is sent anywhere.
+      let bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+      if (scale < 1) {
+        bitmap = await createImageBitmap(bitmap, { resizeWidth: Math.round(bitmap.width * scale), resizeHeight: Math.round(bitmap.height * scale), resizeQuality: 'high' });
+      }
+      chartSource(bitmap, 'your photo', true);
+      root.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+    }
+
+    root.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((b) =>
+      b.addEventListener('click', () => loadSample(b.dataset.sample!, true)),
+    );
+
+    root.querySelector<HTMLInputElement>('[data-file]')?.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) loadFile(file);
+    });
+
+    const drop = root.querySelector<HTMLElement>('[data-drop]');
+    const hint = root.querySelector<HTMLElement>('[data-drop-hint]');
+    if (drop && hint) {
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); hint.hidden = false; });
+      drop.addEventListener('dragleave', () => { hint.hidden = true; });
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        hint.hidden = true;
+        const file = e.dataTransfer?.files[0];
+        if (file) loadFile(file);
+      });
+    }
+
+    // The first example stitches out when the sheet comes into view.
+    loadSample(samples[0].id, false).then(() => {
+      const io = new IntersectionObserver((entries) => {
+        if (!entries[0].isIntersecting) return;
+        io.disconnect();
+        loadSample(samples[0].id, true);
+      }, { threshold: 0.4 });
+      io.observe(canvas);
+    });
+  });
+</script>

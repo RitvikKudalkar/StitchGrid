@@ -1,0 +1,21 @@
+---
+// The logo mark: a 3×3 block of cross stitches on Aida, one stitch in the page's thread colour.
+// Kept in step with public/favicon.svg.
+import { crossPath } from '../data/stitch-font';
+
+interface Props {
+  size?: number;
+  class?: string;
+}
+
+const { size = 32, class: className } = Astro.props;
+const cells = [0, 1, 2].flatMap((y) => [0, 1, 2].map((x) => ({ x: x + 0.5, y: y + 0.5 })));
+const dark = cells.filter((_, i) => i !== 4).map((c) => crossPath(c.x, c.y)).join('');
+const thread = crossPath(cells[4].x, cells[4].y);
+---
+
+<svg class={className} width={size} height={size} viewBox="0 0 4 4" aria-hidden="true">
+  <rect width="4" height="4" fill="#ece9e0" />
+  <path d={dark} stroke="#1a201e" stroke-width="0.26" stroke-linecap="round" fill="none" />
+  <path d={thread} stroke="var(--color-thread, #9c2136)" stroke-width="0.26" stroke-linecap="round" fill="none" />
+</svg>

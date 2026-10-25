@@ -1,0 +1,287 @@
+@import "tailwindcss";
+
+/*
+  StitchGrid design system. See DESIGN.md and execution-plan.md §7.
+  A chart sheet lying on a cutting mat. The mat changes with the theme; the sheet is always paper,
+  because it is what gets printed. One thread colour per craft. Surfaces are separated by tone,
+  never by lines or shadows. Square corners, except the folder-tab corners on buttons and tabs.
+*/
+
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("/fonts/bebas-neue-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/fonts/eb-garamond-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/fonts/eb-garamond-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("/fonts/eb-garamond-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@theme {
+  /* Light theme: a pale cutting mat. Dark values are under :root[data-theme="dark"]. */
+  --color-mat: #cfd8d1;
+  --color-mat-raised: #c2ccc5;
+  --color-text: #1a201e;
+  --color-muted: #48514c;
+  --color-action: #2f5e52;
+  --color-action-ink: #ece9e0;
+
+  /* The sheet: identical in both themes. */
+  --color-sheet: #ece9e0;
+  --color-sheet-ink: #1a201e;
+  --color-sheet-muted: #545a55;
+
+  /* The page's thread colour. Tool pages override it with their own (src/data/tools.ts). */
+  --color-thread: #9c2136;
+  --color-thread-ink: #f6f3ec;
+
+  /* Square corners everywhere; the only shaped corner is the folder tab (--tab-cut). */
+  --radius-*: initial;
+
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 40px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-5xl: 96px;
+  --spacing-section: clamp(96px, 12vw, 200px);
+
+  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
+  --font-serif: "EB Garamond", Garamond, Georgia, serif;
+  --font-sans: var(--font-serif);
+  --font-mono: var(--font-serif); /* taste-skill-ignore: no monospace face; the token points at the text face */
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  :root {
+    /* Type: five steps (execution-plan.md §7.3) */
+    --step-display: clamp(3.5rem, 1.6rem + 8vw, 9rem);
+    --step-head: clamp(2.5rem, 1.2rem + 5vw, 5.5rem);
+    --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+    --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+    --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+    /* The folder-tab corner, shared by tabs and buttons. */
+    --tab-cut: 10px;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --color-mat: #161c1a;
+    --color-mat-raised: #1f2725;
+    --color-text: #e3e2da;
+    --color-muted: #8e948d;
+    --color-action: #9fc7b8;
+    --color-action-ink: #161c1a;
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 88px;
+  }
+
+  body {
+    background-color: var(--color-mat);
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    font-size: var(--step-body);
+    line-height: 1.5;
+    font-variant-numeric: lining-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--color-thread);
+    color: var(--color-thread-ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-action);
+    outline-offset: 3px;
+  }
+
+  a { text-underline-offset: 0.2em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* ---------- Layout ---------- */
+  .wrap {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 3vw, 32px);
+  }
+  .section-gap { margin-top: var(--spacing-section); }
+
+  /* ---------- Type ---------- */
+  /* Bebas has capitals only; the HTML keeps sentence case so the keywords read normally to search engines. */
+  .display-xl,
+  .display-lg {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .display-xl { font-size: var(--step-display); }
+  .display-lg { font-size: var(--step-head); }
+  .lead {
+    font-size: var(--step-lead);
+    line-height: 1.4;
+  }
+  .title {
+    font-size: var(--step-lead);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+  .small {
+    font-size: var(--step-small);
+    line-height: 1.45;
+  }
+  .tabular { font-variant-numeric: lining-nums tabular-nums; }
+
+  /* A reading column of about 68 characters. */
+  .article {
+    max-width: 68ch;
+    line-height: 1.6;
+  }
+  .article > * + * { margin-top: 1.1em; }
+  .article h2 { margin-top: 2.2em; }
+  .article a,
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+  }
+  .article a:hover,
+  .link:hover { text-decoration-thickness: 3px; }
+  .article ul { list-style: disc; padding-left: 1.4em; }
+  .article ul > li + li { margin-top: 0.4em; }
+
+  /* ---------- Buttons: flat fill, square, with the folder-tab corners on top ---------- */
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 12px 28px 10px;
+    font-family: var(--font-serif);
+    font-size: var(--step-body);
+    font-weight: 500;
+    line-height: 1.1;
+    cursor: pointer;
+    clip-path: polygon(0 100%, 0 var(--tab-cut), var(--tab-cut) 0, calc(100% - var(--tab-cut)) 0, 100% var(--tab-cut), 100% 100%);
+    transition: transform 160ms var(--ease-out), filter 160ms var(--ease-out);
+  }
+  .btn-primary {
+    background: var(--color-action);
+    color: var(--color-action-ink);
+  }
+  .btn-secondary {
+    background: var(--color-mat-raised);
+    color: var(--color-text);
+  }
+  .btn-primary:hover,
+  .btn-secondary:hover { filter: brightness(1.08); }
+  .btn-primary:active,
+  .btn-secondary:active { transform: scale(0.97); }
+  /* clip-path would cut off an outside outline, so the focus ring sits inside the shape. */
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: -7px;
+  }
+
+  /* ---------- The sheet: chart paper, the same in both themes ---------- */
+  .sheet {
+    background: var(--color-sheet);
+    color: var(--color-sheet-ink);
+  }
+  .sheet .muted { color: var(--color-sheet-muted); }
+
+  /* The key and the itinerary are printed slips: paper with a zigzag tear along the bottom. */
+  .slip {
+    background: var(--color-sheet);
+    color: var(--color-sheet-ink);
+    padding-bottom: calc(var(--spacing-lg) + 12px);
+    -webkit-mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect width='10' height='10'/%3E%3C/svg%3E") top / 100% calc(100% - 11px) no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12'%3E%3Cpath d='M0 0h16L8 12z'/%3E%3C/svg%3E") bottom left / 16px 12px repeat-x;
+    mask:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect width='10' height='10'/%3E%3C/svg%3E") top / 100% calc(100% - 11px) no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12'%3E%3Cpath d='M0 0h16L8 12z'/%3E%3C/svg%3E") bottom left / 16px 12px repeat-x;
+  }
+
+  /* A filled band in the page's thread colour. */
+  .thread-field {
+    background: var(--color-thread);
+    color: var(--color-thread-ink);
+  }
+  .raised {
+    background: var(--color-mat-raised);
+  }
+
+  /* ---------- Form fields keep their own edges ---------- */
+  .field {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    background: var(--color-sheet);
+    color: var(--color-sheet-ink);
+    border: 2px solid var(--color-sheet);
+    font: inherit;
+  }
+  .field:focus-visible {
+    outline: 3px solid var(--color-action);
+    outline-offset: 2px;
+  }
+  .field::placeholder { color: var(--color-sheet-muted); }
+
+  /* ---------- Entrance motion (Layout.astro adds .js-reveal) ---------- */
+  .js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 75ms);
+  }
+  .js-reveal [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
