@@ -38,9 +38,12 @@ export class ChartView {
   /** Position of each cell in the centre-out stitch-out. */
   private rank: Uint32Array = new Uint32Array(0);
   private revealed = Infinity;
+  /** The source photo, blurred once per image, shown through cells not yet stitched. */
+  private blurred: HTMLCanvasElement | null = null;
   private highlight: number | null = null;
   private dim = 0;
   private frame = 0;
+  private highlightFrame = 0;
   private inks: string[] = [];
   mode: ChartMode = 'colour';
   /** Cell size in CSS pixels after the last draw. */
@@ -55,17 +58,44 @@ export class ChartView {
     return this.chart;
   }
 
-  /** Shows a chart. `stitchOut` plays the centre-out reveal over the blurred source image. */
-  show(chart: ChartData, source: CanvasImageSource | null, stitchOut: boolean) {
+  /**
+   * Shows a chart.
+   * - `now`: fully stitched straight away (option changes, reduced motion).
+   * - `hold`: only the blurred photo, waiting for `play()` once the chart is in view.
+   * - `play`: the centre-out stitch-out over the blurred photo.
+   */
+  show(chart: ChartData, source: CanvasImageSource | null, how: 'now' | 'hold' | 'play') {
     const sameSize = this.chart?.width === chart.width && this.chart?.height === chart.height;
     this.chart = chart;
+    if (source !== this.source || !this.blurred) this.blurred = source ? blurOnce(source) : null;
     this.source = source;
     this.inks = chart.colors.map((c) => (luminance(hexToRgb(c.hex)) > 0.3 ? INK : SHEET));
     if (this.highlight !== null && this.highlight >= chart.colors.length) this.highlight = null;
-    if (!sameSize || stitchOut) this.rank = centreOutRank(chart.width, chart.height);
+    if (!sameSize || how !== 'now') this.rank = centreOutRank(chart.width, chart.height);
     cancelAnimationFrame(this.frame);
 
-    if (!stitchOut || reducedMotion()) {
+    if (how === 'now' || reducedMotion() || !this.blurred) {
+      this.revealed = Infinity;
+      this.draw();
+    } else if (how === 'hold') {
+      this.revealed = 0;
+      this.draw();
+    } else {
+      this.play();
+    }
+  }
+
+  /** True while the chart waits, blurred, for its stitch-out. */
+  get held() {
+    return this.revealed === 0;
+  }
+
+  /** Plays the centre-out stitch-out from the blurred photo to the finished chart. */
+  play() {
+    const chart = this.chart;
+    if (!chart) return;
+    cancelAnimationFrame(this.frame);
+    if (reducedMotion()) {
       this.revealed = Infinity;
       this.draw();
       return;
@@ -74,10 +104,9 @@ export class ChartView {
     const total = chart.width * chart.height;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / STITCH_OUT_MS);
-      this.revealed = Math.floor((1 - (1 - t) ** 3) * total);
+      this.revealed = t < 1 ? Math.max(1, Math.floor((1 - (1 - t) ** 3) * total)) : Infinity;
       this.draw();
       if (t < 1) this.frame = requestAnimationFrame(tick);
-      else this.revealed = Infinity;
     };
     this.frame = requestAnimationFrame(tick);
   }
@@ -89,6 +118,8 @@ export class ChartView {
 
   /** Keeps one colour lit and dims the rest; null lights everything again. */
   setHighlight(index: number | null) {
+    // Only one fade at a time: a finishing fade-out must not clear a newer highlight.
+    cancelAnimationFrame(this.highlightFrame);
     if (index !== null) this.highlight = index;
     const from = this.dim;
     const to = index === null ? 0 : 1;
@@ -104,9 +135,9 @@ export class ChartView {
       this.dim = from + (to - from) * t;
       if (t === 1 && index === null) this.highlight = null;
       this.draw();
-      if (t < 1) requestAnimationFrame(tick);
+      if (t < 1) this.highlightFrame = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    this.highlightFrame = requestAnimationFrame(tick);
   }
 
   /** The cell under a point in CSS pixels relative to the canvas, or null. */
@@ -141,15 +172,7 @@ export class ChartView {
     const h = cell * chart.height;
 
     // Until a cell is stitched, the blurred photo shows through.
-    if (this.revealed !== Infinity && this.source) {
-      ctx.save();
-      ctx.filter = 'blur(8px)';
-      ctx.beginPath();
-      ctx.rect(x0, y0, w, h);
-      ctx.clip();
-      ctx.drawImage(this.source, x0, y0, w, h);
-      ctx.restore();
-    }
+    if (this.revealed !== Infinity && this.blurred) ctx.drawImage(this.blurred, x0, y0, w, h);
 
     if (this.mode === 'made') this.drawMade(x0, y0, cell);
     else this.drawCells(x0, y0, cell);
@@ -294,6 +317,25 @@ export class ChartView {
 
 function ctx_alpha(ctx: CanvasRenderingContext2D, a: number) {
   ctx.globalAlpha = a;
+}
+
+/**
+ * A small blurred copy of the photo, made once per image. Blurring the full-size photo on
+ * every frame of the stitch-out was slow enough to stutter.
+ */
+function blurOnce(source: CanvasImageSource) {
+  const s = source as CanvasImageSource & { width: number; height: number };
+  const scale = 240 / Math.max(s.width, s.height);
+  const w = Math.max(1, Math.round(s.width * scale));
+  const h = Math.max(1, Math.round(s.height * scale));
+  const pad = 8; // drawn past the edges so the blur doesn't fade to transparent at the borders
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.filter = 'blur(3px)';
+  ctx.drawImage(source, -pad, -pad, w + pad * 2, h + pad * 2);
+  return canvas;
 }
 
 function centreOutRank(width: number, height: number) {

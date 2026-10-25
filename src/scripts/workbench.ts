@@ -57,10 +57,10 @@ export function initWorkbench(root: HTMLElement) {
       clearTimeout(slow);
       if (status) status.textContent = '';
       pattern = result;
-      // Play the stitch-out once per new image, and only once the chart can be seen.
-      const play = freshImage && visible;
-      if (play) freshImage = false;
-      view.show(result, preview, play);
+      // Play the stitch-out once per new image. Off screen, hold the blurred photo and play
+      // when the chart scrolls into view, so a finished chart never resets in front of you.
+      view.show(result, preview, freshImage ? (visible ? 'play' : 'hold') : 'now');
+      freshImage = false;
       updateHint();
       canvas.setAttribute('aria-label', `Chart of ${label}: ${result.width} by ${result.height} ${unit} in ${result.colors.length} ${brand} colours`);
       renderKey(result);
@@ -276,12 +276,9 @@ export function initWorkbench(root: HTMLElement) {
 
   // ---------- Start ----------
   loadSample(samples[0].id);
-  new IntersectionObserver((entries, io) => {
-    if (!entries[0].isIntersecting) return;
-    visible = true;
-    io.disconnect();
-    // Replay the first chart now that it can be seen.
-    if (pattern) { freshImage = true; request(); }
+  new IntersectionObserver((entries) => {
+    visible = entries[0].isIntersecting;
+    if (visible && view.held) view.play();
   }, { threshold: 0.35 }).observe(canvas);
 }
 
