@@ -14,5 +14,5 @@ export const CONTACT_EMAIL = 'ritx8877@gmail.com';
 // Web3Forms public access key (safe to expose; it only delivers to the inbox it was created for).
 export const WEB3FORMS_ACCESS_KEY = 'aaa77c75-7a9d-4690-9af1-063741576c9a';
 
-/** GA4 measurement ID. Empty until a PatternSquare property exists; analytics and the consent banner stay off until then. */
-export const GA_ID = '';
+/** GA4 measurement ID. Analytics and the consent banner are off while this is empty. */
+export const GA_ID = 'G-CM5YGT62GZ';
