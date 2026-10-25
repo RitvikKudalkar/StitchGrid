@@ -1,6 +1,6 @@
 ## Project
 
-StitchGrid: free, private, in-browser tools that turn a photo into a printable craft pattern. The plan is `execution-plan.md`; the design system is `DESIGN.md`. Read both before working on a phase.
+PatternSquare: free, private, in-browser tools that turn a photo into a printable craft pattern. The plan is `execution-plan.md`; the design system is `DESIGN.md`. Read both before working on a phase.
 
 - One branch and pull request per phase; never push straight to `main` (pushing to `main` deploys).
 - Site constants (domain, contact, GA ID) live only in `src/data/site.ts`. Tools, their thread colours and `live` flags live in `src/data/tools.ts`.

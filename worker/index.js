@@ -1,7 +1,7 @@
 // Sends every non-canonical URL to its canonical form with a single permanent 301:
 // https, no www., no trailing slash and no .html extension. Everything else is handed
 // to the static assets.
-const CANONICAL_HOST = 'stitchgrid.com';
+const CANONICAL_HOST = 'patternsquare.com';
 
 // Moved pages go here as permanent redirects, so old links keep their rankings.
 const REDIRECTS = {};

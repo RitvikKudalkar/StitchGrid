@@ -6,7 +6,7 @@ import GuideList from '../../components/GuideList.astro';
 import { guides } from '../../data/guides';
 import { toolBySlug } from '../../data/tools';
 
-const title = 'Cross Stitch Guides | StitchGrid';
+const title = 'Cross Stitch Guides | PatternSquare';
 const description = 'Practical guides to turning photos into cross stitch patterns: Aida counts, how many skeins to buy, and charting by hand in Photoshop.';
 const byTool = [...new Set(guides.map((g) => g.tool))].map((slug) => ({ tool: toolBySlug(slug), guides: guides.filter((g) => g.tool === slug) }));
 ---

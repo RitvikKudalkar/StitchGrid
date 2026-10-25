@@ -490,7 +490,7 @@ export function initWorkbench(root: HTMLElement) {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
-  const fileBase = () => `stitchgrid-${craft.fileStem}-${pattern!.width}x${pattern!.height}`;
+  const fileBase = () => `patternsquare-${craft.fileStem}-${pattern!.width}x${pattern!.height}`;
 
   $('[data-export="pdf"]')?.addEventListener('click', async (e) => {
     if (!pattern) return;

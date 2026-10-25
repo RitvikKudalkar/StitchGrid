@@ -1,5 +1,5 @@
 // Openly licensed pictures of needlework, downloaded with credits in src/assets/archive/credits.json.
-// They show the world around the tools and are never presented as StitchGrid's own work.
+// They show the world around the tools and are never presented as PatternSquare's own work.
 // Always show the credit next to the picture.
 import berlinChart from '../assets/archive/berlin-chart.webp';
 import sampler from '../assets/archive/sampler-1937.jpg';

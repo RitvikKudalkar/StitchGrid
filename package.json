@@ -1,5 +1,5 @@
 {
-  "name": "stitchgrid",
+  "name": "patternsquare",
   "type": "module",
   "version": "0.0.1",
   "private": true,
@@ -14,7 +14,8 @@
     "check:contrast": "node scripts/check-contrast.mjs",
     "deploy": "astro build && wrangler deploy",
     "test": "vitest run",
-    "render:examples": "node scripts/render-examples.mjs"
+    "render:examples": "node scripts/render-examples.mjs",
+    "render:icons": "node scripts/render-icons.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",

@@ -7,11 +7,11 @@ import StitchedWord from '../components/StitchedWord.astro';
 import { guides } from '../data/guides';
 import { inSentence, liveTools } from '../data/tools';
 
-const title = 'Page not found | StitchGrid';
+const title = 'Page not found | PatternSquare';
 const description = 'This page does not exist.';
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} noindex>
   <Header />
 
   <main id="main" tabindex="-1" class="flex-1 w-full outline-none">
