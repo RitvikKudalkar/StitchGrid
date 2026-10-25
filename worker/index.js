@@ -32,6 +32,13 @@ export default {
 			return Response.redirect(target.toString(), 301);
 		}
 
-		return env.ASSETS.fetch(request);
+		const response = await env.ASSETS.fetch(request);
+		// The workers.dev address is a preview copy of the site: keep it out of search results.
+		if (url.hostname.endsWith('.workers.dev')) {
+			const preview = new Response(response.body, response);
+			preview.headers.set('X-Robots-Tag', 'noindex');
+			return preview;
+		}
+		return response;
 	},
 };

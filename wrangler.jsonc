@@ -1,7 +1,13 @@
 {
   "name": "patternsquare",
   "compatibility_date": "2026-10-25",
+  // The site lives on its own domain; the workers.dev preview is off.
   "workers_dev": false,
+  // Cloudflare creates the DNS records for these. www is redirected to the bare domain by the worker.
+  "routes": [
+    { "pattern": "patternsquare.com", "custom_domain": true },
+    { "pattern": "www.patternsquare.com", "custom_domain": true }
+  ],
   "main": "./worker/index.js",
   "assets": {
     "directory": "./dist",
