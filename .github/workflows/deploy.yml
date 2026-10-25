@@ -11,18 +11,28 @@ jobs:
     name: Deploy
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
+      # Astro needs a recent Node (see "engines" in package.json). A bare "22" let the runner use
+      # an older cached 22.x that Astro refuses, so pin the major version we build with locally.
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
+
+      # Titles, descriptions, canonicals, structured data, links and the sitemap.
+      - name: SEO audit
+        run: npm run seo
 
       - name: Deploy with Wrangler
         uses: cloudflare/wrangler-action@v3
