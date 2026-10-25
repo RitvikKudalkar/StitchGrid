@@ -3,6 +3,7 @@
 // Every live tool and guide page is listed here.
 import StitchedWord from './StitchedWord.astro';
 import { GA_ID } from '../data/site';
+import { guides } from '../data/guides';
 import { liveTools, tools } from '../data/tools';
 
 const threads = [...new Set(tools.map((t) => t.thread))];
@@ -13,12 +14,17 @@ const threads = [...new Set(tools.map((t) => t.thread))];
     <StitchedWord text="StitchGrid" threads={threads} />
 
     <div class="grid grid-cols-2 lg:grid-cols-12 gap-x-lg gap-y-3xl mt-4xl reveal-children">
-      <div class="lg:col-span-4 flex flex-col gap-sm">
+      <div class="lg:col-span-3 flex flex-col gap-sm">
         <p class="title">Tools</p>
         {liveTools.map((t) => <a href={`/${t.slug}`} class="footer-link">{t.name}</a>)}
       </div>
 
-      <div class="lg:col-span-4 flex flex-col gap-sm">
+      <div class="lg:col-span-3 flex flex-col gap-sm">
+        <p class="title">Guides</p>
+        {guides.map((g) => <a href={`/guides/${g.slug}`} class="footer-link">{g.title}</a>)}
+      </div>
+
+      <div class="lg:col-span-2 flex flex-col gap-sm">
         <p class="title">StitchGrid</p>
         <a href="/about" class="footer-link">About</a>
         <a href="/contact" class="footer-link">Contact</a>

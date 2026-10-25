@@ -1,0 +1,61 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import type { Faq } from '../../data/schema';
+
+const faqs: Faq[] = [
+  { question: 'Can GIMP do the same thing?', answer: 'Yes. Use Image › Scale Image to set the width in pixels, Image › Mode › Indexed to reduce colours, and View › Show Grid with a 1-pixel grid after scaling up.' },
+  { question: 'Does Photoshop match colours to DMC threads?', answer: 'No. It picks the best colours for the image, not real thread colours. You have to match each one to a DMC number yourself, by eye or with a conversion chart.' },
+  { question: 'Why do my colours look blotchy after Indexed Color?', answer: 'Dithering is probably on. Set Dither to None, so each area becomes a single flat colour you can stitch.' },
+];
+---
+
+<GuideLayout slug="photo-to-cross-stitch-pattern-in-photoshop" faqs={faqs}>
+  <p class="lead">Photoshop can turn a photo into a cross stitch chart: shrink it so one pixel is one stitch, reduce it to a handful of colours, and show a grid. What it can't do is match those colours to real threads. This guide covers both the Photoshop route and the faster free way.</p>
+
+  <h2 class="display-lg">The Photoshop way</h2>
+  <h3>1. Crop</h3>
+  <p>Open your photo and use the Crop tool to keep only the subject. A tight crop gives every stitch to the part you care about.</p>
+
+  <h3>2. Set the size in stitches</h3>
+  <p>Go to <strong>Image › Image Size</strong>. Keep the width and height linked, and set the <strong>width in pixels</strong> to the number of stitches you want across, for example 100. Choose <strong>Bicubic (smooth gradients)</strong> for resampling so each pixel averages the area it replaces. Click OK. The image is now tiny: one pixel per stitch.</p>
+
+  <h3>3. Reduce the colours</h3>
+  <p>Go to <strong>Image › Mode › Indexed Color</strong>. Set:</p>
+  <ul>
+    <li><strong>Palette:</strong> Local (Perceptual) or Local (Selective)</li>
+    <li><strong>Colors:</strong> the number of threads you want, for example 20</li>
+    <li><strong>Forced:</strong> None</li>
+    <li><strong>Dither:</strong> None, so areas stay flat and stitchable</li>
+  </ul>
+  <p>You can see the chosen colours afterwards under <strong>Image › Mode › Color Table</strong>.</p>
+
+  <h3>4. Make it readable as a chart</h3>
+  <p>Switch back to <strong>Image › Mode › RGB Color</strong> so you can scale up. Open <strong>Image › Image Size</strong> again and multiply the width by 10 (100 becomes 1000), this time with <strong>Nearest Neighbor (hard edges)</strong> so every stitch becomes a crisp 10 × 10 block.</p>
+  <p>Then set a grid in <strong>Edit › Preferences › Guides, Grid &amp; Slices</strong> (Photoshop › Settings on a Mac): gridline every <strong>100 pixels</strong> with <strong>10 subdivisions</strong>. Turn it on with <strong>View › Show › Grid</strong>. You now have a square per stitch and a bold line every 10.</p>
+
+  <h3>5. Match each colour to a thread</h3>
+  <p>This is the slow part. For each colour in the color table, use the Eyedropper to read its value, then find the nearest DMC thread on a colour chart. Write the numbers down and assign each one a symbol if you want a printable black-and-white chart, which Photoshop won't make for you.</p>
+
+  <h3>6. Print</h3>
+  <p>Print the scaled-up image with the grid. For anything over about 60 stitches wide, you'll need to split it across pages yourself, with <strong>Image › Canvas Size</strong> or by printing selections.</p>
+
+  <h2 class="display-lg">Where Photoshop falls short</h2>
+  <ul>
+    <li><strong>No thread matching.</strong> Indexed Color chooses screen colours, and you match them to DMC by hand.</li>
+    <li><strong>No symbols or key.</strong> You'd have to build the legend and symbol chart yourself.</li>
+    <li><strong>No stitch counts</strong>, so no skein estimate.</li>
+    <li><strong>No page splitting</strong> with numbered rows and columns.</li>
+    <li><strong>No cleanup</strong> of single scattered stitches.</li>
+  </ul>
+  <p>It's a good way to understand what a pattern maker does, and useful if you want full manual control. For a stitchable chart, it's a lot of steps.</p>
+
+  <h2 class="display-lg">The faster free way</h2>
+  <p>The <a href="/cross-stitch-pattern-maker">StitchGrid cross stitch pattern maker</a> does every step above in your browser, in about a second:</p>
+  <ol>
+    <li>Drop your photo on the chart, or choose it from your device.</li>
+    <li>Set the width in stitches and the number of colours.</li>
+    <li>Colours are matched straight to DMC threads, judged by how they look to the eye.</li>
+    <li>Download a PDF with symbols, a key with DMC numbers and skein estimates, and the chart split across numbered pages.</li>
+  </ol>
+  <p>Like Photoshop, it works on your own computer: the photo is never uploaded.</p>
+</GuideLayout>

@@ -1,50 +1,68 @@
-// Draws a chart on the sheet: cells, a fine line per cell and a bold line every 10 (the chart
-// convention), column and row numbers, and centre arrows. Plays the stitch-out once per new image
-// and dims every other colour while one key row is highlighted (execution-plan.md §7.6).
+// Draws a pattern on the sheet: cells, a fine line per cell and a bold line every 10 (the chart
+// convention), column and row numbers, and centre arrows. Three views: colour, symbols, and
+// "as made" (cross stitches on Aida). Plays the stitch-out once per new image and dims every
+// other colour while one key row is highlighted (execution-plan.md §7.6).
 
-export type RGB = [number, number, number];
+import { EMPTY } from '../engine/map-palette';
+import { drawSymbol, symbolFor } from '../engine/symbols';
+import { hexToRgb, luminance } from '../engine/color';
 
-export interface Chart {
+export interface ChartData {
   width: number;
   height: number;
-  /** Palette index per cell, row by row. */
-  cells: Uint8Array;
-  palette: RGB[];
-  /** Cells per palette colour. */
-  counts: number[];
+  /** Per cell, an index into `colors`, or EMPTY. */
+  cells: Uint16Array;
+  colors: { hex: string; code: string; name: string }[];
 }
+
+export type ChartMode = 'colour' | 'symbols' | 'made';
 
 const INK = '#1a201e';
 const SHEET = '#ece9e0';
+const AIDA_HOLE = 'rgba(26, 32, 30, 0.16)';
 const STITCH_OUT_MS = 700;
 const HIGHLIGHT_MS = 200;
 const DIMMED = 0.15;
+const MARGIN = 26; // room for the numbers and arrows
+/** Symbols are drawn on coloured cells once cells are at least this many pixels wide. */
+const SYMBOLS_IN_COLOUR_FROM = 14;
+/** Below this cell size, symbols can't be read. */
+export const MIN_SYMBOL_CELL = 7;
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export class ChartView {
   private ctx: CanvasRenderingContext2D;
-  private chart: Chart | null = null;
+  private chart: ChartData | null = null;
   private source: CanvasImageSource | null = null;
-  /** Cell indices sorted from the centre outwards, for the stitch-out. */
-  private order: Uint32Array = new Uint32Array(0);
+  /** Position of each cell in the centre-out stitch-out. */
+  private rank: Uint32Array = new Uint32Array(0);
   private revealed = Infinity;
   private highlight: number | null = null;
   private dim = 0;
   private frame = 0;
+  private inks: string[] = [];
+  mode: ChartMode = 'colour';
+  /** Cell size in CSS pixels after the last draw. */
+  cell = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!;
     new ResizeObserver(() => this.draw()).observe(canvas);
   }
 
+  get data() {
+    return this.chart;
+  }
+
   /** Shows a chart. `stitchOut` plays the centre-out reveal over the blurred source image. */
-  show(chart: Chart, source: CanvasImageSource, stitchOut: boolean) {
+  show(chart: ChartData, source: CanvasImageSource | null, stitchOut: boolean) {
+    const sameSize = this.chart?.width === chart.width && this.chart?.height === chart.height;
     this.chart = chart;
     this.source = source;
-    this.highlight = null;
-    this.dim = 0;
-    this.order = centreOutOrder(chart.width, chart.height);
+    this.inks = chart.colors.map((c) => (luminance(hexToRgb(c.hex)) > 0.3 ? INK : SHEET));
+    if (this.highlight !== null && this.highlight >= chart.colors.length) this.highlight = null;
+    if (!sameSize || stitchOut) this.rank = centreOutRank(chart.width, chart.height);
     cancelAnimationFrame(this.frame);
 
     if (!stitchOut || reducedMotion()) {
@@ -53,15 +71,20 @@ export class ChartView {
       return;
     }
     const start = performance.now();
-    const total = this.order.length;
+    const total = chart.width * chart.height;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / STITCH_OUT_MS);
-      this.revealed = Math.floor(easeOut(t) * total);
+      this.revealed = Math.floor((1 - (1 - t) ** 3) * total);
       this.draw();
       if (t < 1) this.frame = requestAnimationFrame(tick);
       else this.revealed = Infinity;
     };
     this.frame = requestAnimationFrame(tick);
+  }
+
+  setMode(mode: ChartMode) {
+    this.mode = mode;
+    this.draw();
   }
 
   /** Keeps one colour lit and dims the rest; null lights everything again. */
@@ -86,14 +109,23 @@ export class ChartView {
     requestAnimationFrame(tick);
   }
 
-  private draw() {
+  /** The cell under a point in CSS pixels relative to the canvas, or null. */
+  cellAt(x: number, y: number) {
+    if (!this.chart || !this.cell) return null;
+    const cx = Math.floor((x - MARGIN) / this.cell);
+    const cy = Math.floor((y - MARGIN) / this.cell);
+    if (cx < 0 || cy < 0 || cx >= this.chart.width || cy >= this.chart.height) return null;
+    return { x: cx, y: cy, color: this.chart.cells[cy * this.chart.width + cx] };
+  }
+
+  draw() {
     const { canvas, ctx, chart } = this;
     if (!chart) return;
     const dpr = window.devicePixelRatio || 1;
     const cssWidth = canvas.clientWidth;
-    const margin = 26; // room for the numbers and arrows
-    const cell = Math.max(2, (cssWidth - margin * 2) / chart.width);
-    const cssHeight = Math.round(cell * chart.height + margin * 2);
+    const cell = Math.max(2, (cssWidth - MARGIN * 2) / chart.width);
+    this.cell = cell;
+    const cssHeight = Math.round(cell * chart.height + MARGIN * 2);
     if (canvas.width !== Math.round(cssWidth * dpr) || canvas.height !== Math.round(cssHeight * dpr)) {
       canvas.width = Math.round(cssWidth * dpr);
       canvas.height = Math.round(cssHeight * dpr);
@@ -103,8 +135,8 @@ export class ChartView {
     ctx.fillStyle = SHEET;
     ctx.fillRect(0, 0, cssWidth, cssHeight);
 
-    const x0 = margin;
-    const y0 = margin;
+    const x0 = MARGIN;
+    const y0 = MARGIN;
     const w = cell * chart.width;
     const h = cell * chart.height;
 
@@ -119,19 +151,107 @@ export class ChartView {
       ctx.restore();
     }
 
-    const total = this.revealed === Infinity ? this.order.length : this.revealed;
-    for (let n = 0; n < total; n++) {
-      const i = this.order[n];
-      const p = chart.cells[i];
-      const [r, g, b] = chart.palette[p];
-      const lit = this.highlight === null || p === this.highlight;
-      ctx.globalAlpha = lit ? 1 : 1 - this.dim * (1 - DIMMED);
-      ctx.fillStyle = `rgb(${r} ${g} ${b})`;
-      ctx.fillRect(x0 + (i % chart.width) * cell, y0 + Math.floor(i / chart.width) * cell, Math.ceil(cell), Math.ceil(cell));
-    }
-    ctx.globalAlpha = 1;
+    if (this.mode === 'made') this.drawMade(x0, y0, cell);
+    else this.drawCells(x0, y0, cell);
 
-    // Grid: a fine line per cell when cells are big enough to read, a bold line every 10.
+    if (this.mode !== 'made') this.drawGrid(x0, y0, w, h, cell);
+    this.drawNumbers(x0, y0, w, h, cell);
+  }
+
+  private alphaFor(color: number) {
+    return this.highlight === null || color === this.highlight ? 1 : 1 - this.dim * (1 - DIMMED);
+  }
+
+  /** Cells grouped by colour, so each colour is one path. */
+  private groups() {
+    const chart = this.chart!;
+    const groups: number[][] = chart.colors.map(() => []);
+    const limit = this.revealed;
+    for (let i = 0; i < chart.cells.length; i++) {
+      const c = chart.cells[i];
+      if (c === EMPTY || this.rank[i] >= limit) continue;
+      groups[c].push(i);
+    }
+    return groups;
+  }
+
+  private drawCells(x0: number, y0: number, cell: number) {
+    const chart = this.chart!;
+    const groups = this.groups();
+    const readable = cell >= MIN_SYMBOL_CELL;
+    const symbols = readable && (this.mode === 'symbols' || cell >= SYMBOLS_IN_COLOUR_FROM);
+    // Symbols too small to read would leave a blank sheet, so colour stands in until zoomed.
+    const fill = this.mode === 'colour' || !readable;
+    const size = Math.ceil(cell);
+    groups.forEach((cells, c) => {
+      ctx_alpha(this.ctx, this.alphaFor(c));
+      if (fill) {
+        this.ctx.fillStyle = chart.colors[c].hex;
+        this.ctx.beginPath();
+        for (const i of cells) this.ctx.rect(x0 + (i % chart.width) * cell, y0 + Math.floor(i / chart.width) * cell, size, size);
+        this.ctx.fill();
+      }
+      if (symbols) {
+        const ink = fill ? this.inks[c] : INK;
+        const ops = symbolFor(c);
+        for (const i of cells) drawSymbol(this.ctx, ops, x0 + (i % chart.width) * cell, y0 + Math.floor(i / chart.width) * cell, cell, ink);
+      }
+    });
+    ctx_alpha(this.ctx, 1);
+  }
+
+  /** Cross stitches on Aida: a hole at every corner, two thread strokes per cell. */
+  private drawMade(x0: number, y0: number, cell: number) {
+    const chart = this.chart!;
+    const { ctx } = this;
+    if (cell >= 4) {
+      ctx.fillStyle = AIDA_HOLE;
+      const r = Math.max(0.6, cell * 0.08);
+      ctx.beginPath();
+      for (let y = 0; y <= chart.height; y++) {
+        for (let x = 0; x <= chart.width; x++) {
+          ctx.moveTo(x0 + x * cell + r, y0 + y * cell);
+          ctx.arc(x0 + x * cell, y0 + y * cell, r, 0, Math.PI * 2);
+        }
+      }
+      ctx.fill();
+    }
+    const inset = cell * 0.12;
+    ctx.lineCap = 'round';
+    this.groups().forEach((cells, c) => {
+      ctx_alpha(ctx, this.alphaFor(c));
+      ctx.beginPath();
+      for (const i of cells) {
+        const x = x0 + (i % chart.width) * cell;
+        const y = y0 + Math.floor(i / chart.width) * cell;
+        ctx.moveTo(x + inset, y + inset);
+        ctx.lineTo(x + cell - inset, y + cell - inset);
+        ctx.moveTo(x + cell - inset, y + inset);
+        ctx.lineTo(x + inset, y + cell - inset);
+      }
+      ctx.strokeStyle = chart.colors[c].hex;
+      ctx.lineWidth = cell * 0.3;
+      ctx.stroke();
+      // A thin lighter line along the top stroke reads as the sheen of stranded cotton.
+      if (cell >= 8) {
+        ctx.beginPath();
+        for (const i of cells) {
+          const x = x0 + (i % chart.width) * cell;
+          const y = y0 + Math.floor(i / chart.width) * cell;
+          ctx.moveTo(x + cell - inset * 1.4, y + inset * 1.4);
+          ctx.lineTo(x + inset * 1.4, y + cell - inset * 1.4);
+        }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = cell * 0.08;
+        ctx.stroke();
+      }
+    });
+    ctx_alpha(ctx, 1);
+  }
+
+  private drawGrid(x0: number, y0: number, w: number, h: number, cell: number) {
+    const chart = this.chart!;
+    const { ctx } = this;
     ctx.strokeStyle = INK;
     for (let c = 0; c <= chart.width; c++) {
       const bold = c % 10 === 0 || c === chart.width;
@@ -148,16 +268,21 @@ export class ChartView {
       line(ctx, x0, y0 + r * cell, x0 + w, y0 + r * cell);
     }
     ctx.globalAlpha = 1;
+  }
 
-    // Numbers every 10 along the top and left.
+  private drawNumbers(x0: number, y0: number, w: number, h: number, cell: number) {
+    const chart = this.chart!;
+    const { ctx } = this;
     ctx.fillStyle = INK;
     ctx.font = '500 12px "EB Garamond", Georgia, serif';
+    // Every 10, unless cells are so small the numbers would collide.
+    const every = cell * 10 >= 22 ? 10 : 20;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    for (let c = 10; c < chart.width; c += 10) ctx.fillText(String(c), x0 + c * cell, y0 - 8);
+    for (let c = every; c < chart.width; c += every) ctx.fillText(String(c), x0 + c * cell, y0 - 8);
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    for (let r = 10; r < chart.height; r += 10) ctx.fillText(String(r), x0 - 6, y0 + r * cell);
+    for (let r = every; r < chart.height; r += every) ctx.fillText(String(r), x0 - 6, y0 + r * cell);
 
     // Centre arrows: stitchers start from the middle of the chart.
     const cx = x0 + w / 2;
@@ -167,16 +292,21 @@ export class ChartView {
   }
 }
 
-function centreOutOrder(width: number, height: number) {
-  const cx = (width - 1) / 2;
-  const cy = (height - 1) / 2;
-  const idx = Array.from({ length: width * height }, (_, i) => i);
-  const dist = (i: number) => Math.max(Math.abs((i % width) - cx), Math.abs(Math.floor(i / width) - cy));
-  idx.sort((a, b) => dist(a) - dist(b));
-  return Uint32Array.from(idx);
+function ctx_alpha(ctx: CanvasRenderingContext2D, a: number) {
+  ctx.globalAlpha = a;
 }
 
-const easeOut = (t: number) => 1 - (1 - t) ** 3;
+function centreOutRank(width: number, height: number) {
+  const cx = (width - 1) / 2;
+  const cy = (height - 1) / 2;
+  const n = width * height;
+  const dist = new Float32Array(n);
+  for (let i = 0; i < n; i++) dist[i] = Math.max(Math.abs((i % width) - cx), Math.abs(Math.floor(i / width) - cy));
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => dist[a] - dist[b]);
+  const rank = new Uint32Array(n);
+  order.forEach((i, r) => (rank[i] = r));
+  return rank;
+}
 
 function line(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   ctx.beginPath();

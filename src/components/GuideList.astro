@@ -1,0 +1,69 @@
+---
+// Guide rows: thumbnail, title and description, filled bars with no lines. Hover fills the row
+// with the tool's thread colour.
+import { Image } from 'astro:assets';
+import type { Guide } from '../data/guides';
+import { toolBySlug } from '../data/tools';
+
+interface Props {
+  guides: Guide[];
+}
+
+const { guides } = Astro.props;
+---
+
+<ul class="guide-rows reveal-children">
+  {guides.map((g) => {
+    const tool = toolBySlug(g.tool);
+    return (
+      <li>
+        <a href={`/guides/${g.slug}`} class="guide-row" style={`--c: ${tool.thread}; --ink: ${tool.threadInk}`}>
+          <Image src={g.picture.image} alt="" widths={[160, 320]} sizes="160px" class="guide-thumb" />
+          <span class="title">{g.title}</span>
+          <span class="guide-desc">{g.description}</span>
+        </a>
+      </li>
+    );
+  })}
+</ul>
+
+<style>
+  .guide-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: var(--spacing-xl);
+  }
+  .guide-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 6px 20px;
+    align-items: center;
+    padding: 12px;
+    background: var(--color-mat-raised);
+    transition: transform 200ms var(--ease-out), background-color 200ms var(--ease-out), color 200ms var(--ease-out);
+  }
+  .guide-thumb {
+    grid-row: span 2;
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+  }
+  .guide-desc { max-width: 60ch; }
+  @media (min-width: 900px) {
+    .guide-row {
+      grid-template-columns: 160px 5fr 6fr;
+      gap: 4px 32px;
+    }
+    .guide-thumb {
+      grid-row: auto;
+      width: 160px;
+      height: 120px;
+    }
+  }
+  .guide-row:hover {
+    transform: translateX(6px);
+    background: var(--c);
+    color: var(--ink);
+  }
+</style>

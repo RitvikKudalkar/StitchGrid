@@ -1,0 +1,56 @@
+---
+import GuideLayout from '../../layouts/GuideLayout.astro';
+import type { Faq } from '../../data/schema';
+
+const counts = [
+  { count: 11, strands: '3', needle: '22 or 24', feel: 'Large squares, easy to see. Good for beginners, children and bold designs.' },
+  { count: 14, strands: '2', needle: '24', feel: 'The standard. Most kits and charts assume it. Good balance of detail and comfort.' },
+  { count: 16, strands: '2', needle: '24 or 26', feel: 'Finer and neater. A good step up once 14-count feels easy.' },
+  { count: 18, strands: '1 or 2', needle: '26', feel: 'Small squares and fine detail. Hard on the eyes without good light.' },
+];
+const widths = [50, 100, 150, 200];
+
+const faqs: Faq[] = [
+  { question: 'What is the most common Aida count?', answer: '14-count. Most kits and published charts are designed for it, and it suits two strands of standard stranded cotton.' },
+  { question: 'Can I stitch a 14-count chart on 18-count fabric?', answer: 'Yes. The chart doesn\'t change, only the size: the same design comes out about 22% smaller on 18-count. Use one or two strands so the stitches don\'t crowd.' },
+  { question: 'What is evenweave, and how does its count compare?', answer: 'Evenweave and linen have a higher thread count and are usually stitched over two threads, so 28-count evenweave stitched over two gives the same size as 14-count Aida.' },
+];
+---
+
+<GuideLayout slug="aida-fabric-count-explained" faqs={faqs}>
+  <p class="lead">Aida count is the number of stitches that fit in one inch of fabric. The higher the count, the smaller the squares and the smaller your finished piece. The chart stays the same; only its size on the fabric changes.</p>
+
+  <h2 class="display-lg">How count changes the size</h2>
+  <p>To find the finished size, divide the number of stitches by the count. That's all there is to it. A design 140 stitches wide is 10 inches on 14-count (140 ÷ 14) and about 7.8 inches on 18-count (140 ÷ 18).</p>
+  <table>
+    <thead><tr><th scope="col">Chart width</th>{counts.map((c) => <th scope="col">{c.count}-count</th>)}</tr></thead>
+    <tbody>
+      {widths.map((w) => (
+        <tr><td>{w} stitches</td>{counts.map((c) => <td>{(w / c.count).toFixed(1)} in ({((w / c.count) * 2.54).toFixed(1)} cm)</td>)}</tr>
+      ))}
+    </tbody>
+  </table>
+  <p>Remember to add fabric for framing: 2–3 inches (5–8 cm) on every side is usual.</p>
+
+  <h2 class="display-lg">Which count to choose</h2>
+  <table>
+    <thead><tr><th scope="col">Count</th><th scope="col">Strands</th><th scope="col">Tapestry needle</th><th scope="col">What it's like</th></tr></thead>
+    <tbody>
+      {counts.map((c) => (
+        <tr><td>{c.count}</td><td>{c.strands}</td><td>{c.needle}</td><td>{c.feel}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <p>Stranded cotton comes as six strands twisted together; you separate them and stitch with a few. The right number fills the square without crowding it. Too few and the fabric shows through; too many and the stitches bulge and the holes stretch.</p>
+
+  <h3>Choosing for a photo pattern</h3>
+  <p>Photo charts tend to be wide, because detail needs squares. If your chart is 150 stitches across and you want it to fit a 10-inch frame, you need at least 15-count, so 16-count is the natural choice. Work backwards: <strong>stitches ÷ frame width = minimum count</strong>.</p>
+  <p>If you're new to cross stitch, start on 14-count even if it makes the piece a little bigger. Comfort matters more than size when you have thousands of stitches ahead of you.</p>
+
+  <h2 class="display-lg">Aida, evenweave and linen</h2>
+  <p>Aida is woven in little blocks with a clear hole at each corner, which makes counting easy. Evenweave and linen are woven with single threads, have a higher count, and are usually stitched "over two": each cross covers two threads each way. Over two, 28-count evenweave gives 14 stitches to the inch, and 32-count gives 16.</p>
+  <p>Evenweave looks smoother and suits fractional stitches, but it's harder to count. For a first photo pattern, Aida is the forgiving choice.</p>
+
+  <h2 class="display-lg">Count and thread use</h2>
+  <p>A higher count uses less thread per stitch, because each stitch is smaller. A chart on 18-count needs about a quarter less thread than the same chart on 14-count with the same strands. The <a href="/guides/how-many-dmc-skeins-do-i-need">skein guide</a> has the numbers.</p>
+</GuideLayout>

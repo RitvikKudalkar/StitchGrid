@@ -43,7 +43,9 @@ Sentence case. No eyebrow labels, no all-caps tracked labels, no 01/02/03, no "â
 
 ## Components
 
-- `Workbench.astro`: the chart sheet (`ChartView`, `src/scripts/chart-view.ts`) and the key slip. Shows an example already charted; with `upload`, takes a file or a drop. Phase 1 swaps `preview-chart.ts` for the engine.
+- `Workbench.astro`: the chart sheet and the key slip, driven by `src/scripts/workbench.ts`. Shows an example already charted. With `tool`, adds the settings, the three views (Colour, Symbols, As made), zoom, the hover readout, photo upload (pick, drop or paste) and the PDF, image and thread-list exports.
+- `ChartView` (`src/scripts/chart-view.ts`) draws the chart on canvas; the pattern itself comes from the engine (`src/engine/`) running in `src/workers/pattern.worker.ts`. Symbols are shared shapes (`src/engine/symbols.ts`) so screen and PDF match.
+- `GuideList.astro`: guide rows with a picture, title and description; hover fills the row with the tool's thread.
 - `FolderStack.astro`: the homepage hero. Back folders link to sections and lend them their colour; the front folder is open.
 - `StitchedWord.astro`: text as real cross stitches from `src/data/stitch-font.ts`. The footer mark and the OG image use it.
 - `Mark.astro`: the logo, a 3Ã—3 block of stitches with the centre one in the page's thread. Kept in step with `public/favicon.svg`.
@@ -51,7 +53,8 @@ Sentence case. No eyebrow labels, no all-caps tracked labels, no 01/02/03, no "â
 ## Imagery
 
 - `src/assets/examples/`: example images for samples and the gallery. **Currently AI-generated test images**; replace with real photos before launch, keeping file names and crops. Always captioned "Example image".
-- `src/assets/archive/`: public-domain needlework history, with credits in `credits.json` and `src/data/archive.ts`. Always credited on the page, never presented as StitchGrid's work.
+- `src/assets/archive/`: openly licensed needlework history (CC0 and CC BY), with credits in `credits.json` and `src/data/archive.ts`. Always credited next to the picture, never presented as StitchGrid's work. Each guide has a lead picture (`picture` in `src/data/guides.ts`), also used as its thumbnail.
+- The inspector counts a picture from 160 Ã— 120 px up, so list thumbnails are that size on desktop.
 
 ## Motion
 

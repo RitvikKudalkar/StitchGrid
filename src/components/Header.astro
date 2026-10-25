@@ -6,6 +6,7 @@ import { liveTools } from '../data/tools';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const links = [
   ...liveTools.map((t) => ({ href: `/${t.slug}`, label: t.tab })),
+  { href: '/guides', label: 'Guides' },
   { href: '/about', label: 'About' },
 ];
 ---
@@ -40,6 +41,11 @@ const links = [
   .nav-link {
     font-size: var(--step-body);
     padding-block: 10px;
+    white-space: nowrap;
+  }
+  /* About is in the footer; on a phone the bar keeps the tools and guides. */
+  @media (max-width: 479px) {
+    .nav-link[href="/about"] { display: none; }
   }
   .nav-link:hover,
   .nav-link[aria-current='page'] {

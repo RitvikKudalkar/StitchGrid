@@ -49,6 +49,8 @@
   --color-sheet: #ece9e0;
   --color-sheet-ink: #1a201e;
   --color-sheet-muted: #545a55;
+  /* One tone step on the sheet: inactive buttons, fields, hovered key rows. */
+  --color-sheet-raised: #dcd8cc;
 
   /* The page's thread colour. Tool pages override it with their own (src/data/tools.ts). */
   --color-thread: #9c2136;

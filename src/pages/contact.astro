@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { Image } from 'astro:assets';
+import { archive } from '../data/archive';
 import { CONTACT_EMAIL, WEB3FORMS_ACCESS_KEY } from '../data/site';
 
 const title = 'Contact StitchGrid';
@@ -16,14 +18,18 @@ const description = 'Report a problem with a pattern, suggest a craft or a threa
       <h1 class="display-xl mb-lg">Contact</h1>
       <p class="lead max-w-[44ch]">A chart that looks wrong, a thread brand you'd like added, a craft we're missing: I read every message and usually reply within a few days.</p>
 
-      <div class="contact-grid mt-4xl">
+      <div class="contact-grid mt-4xl reveal-children">
         <div class="flex flex-col gap-md">
           <h2 class="title">Email</h2>
           <a href={`mailto:${CONTACT_EMAIL}`} class="lead link break-all">{CONTACT_EMAIL}</a>
           <p class="max-w-[40ch]">If a pattern looks wrong, say which tool, the size and number of colours you chose, and your browser. Please don't attach private photos; a description is enough.</p>
+          <figure class="mt-xl">
+            <Image src={archive.sampler1791.image} alt={archive.sampler1791.alt} widths={[480, 960]} sizes="(min-width: 900px) 35vw, 100vw" class="contact-plate" />
+            <figcaption class="small mt-xs">Polly Bedford signed her sampler in 1791. A note with your name works too. <a href={archive.sampler1791.source} class="link">{archive.sampler1791.credit}</a></figcaption>
+          </figure>
         </div>
 
-        <form id="contact-form" action="https://api.web3forms.com/submit" method="post" class="sheet p-lg sm:p-xl flex flex-col gap-lg">
+        <form id="contact-form" action="https://api.web3forms.com/submit" method="post" class="sheet p-lg sm:p-xl flex flex-col gap-lg reveal-children">
           <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY} />
           <input type="hidden" name="from_name" value="StitchGrid contact form" />
           <!-- Honeypot field for spam bots; Web3Forms rejects submissions where it is checked. -->
@@ -70,7 +76,8 @@ const description = 'Report a problem with a pattern, suggest a craft or a threa
   @media (min-width: 900px) {
     .contact-grid { grid-template-columns: 5fr 7fr; align-items: start; }
   }
-  .sheet .field { background: #dcd8cc; border-color: #dcd8cc; }
+  .contact-plate { display: block; width: 100%; max-width: 420px; height: auto; }
+  .sheet .field { background: var(--color-sheet-raised); border-color: var(--color-sheet-raised); }
 </style>
 
 <script>
